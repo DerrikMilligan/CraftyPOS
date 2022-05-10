@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model GlobalConfig {
+  id           Int   @id @default(autoincrement())
+  salesTaxRate Float
+}
+
+model PaymentMethod {
+  id             Int       @id @default(autoincrement())
+  name           String
+  flatFee        Float     @default(0.0)
+  percentFee     Float     @default(0.0)
+  roundToQuarter Boolean   @default(false)
+  active         Boolean   @default(true)
+  Invoice        Invoice[]
+}
+
+model User {
+  id             Int    @id @default(autoincrement())
+  email          String @unique
+  hashedPassword String
+  role           Role   @default(USER)
+  Log            Log[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Vendor {
+  id        Int    @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+
+  inventory Inventory[]
+}
+
+model Tag {
+  id          Int    @id @default(autoincrement())
+  name        String
+  displayName String
+
+  inventory Inventory[] @relation(references: [id])
+}
+
+model Inventory {
+  id          Int    @id @default(autoincrement())
+  displayName String
+  stock       Int
+  price       Float
+
+  vendorID Int
+  vendor   Vendor @relation(fields: [vendorID], references: [id])
+
+  tags Tag[] @relation(references: [id])
+
+  Transaction Transaction[]
+}
+
+model Customer {
+  id        Int    @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String
+  phone     String
+
+  Invoice Invoice[]
+}
+
+model Invoice {
+  id Int @id @default(autoincrement())
+
+  customerId Int
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  paymentMethodId Int
+  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+
+  subTotal       Float
+  salesTax       Float
+  processingFees Float
+  total          Float
+
+  isBundle       Boolean @default(false)
+  bundleSubTotal Float
+
+  checkNumber String
+
+  timestamp DateTime @default(now())
+
+  Transaction Transaction[]
+}
+
+model Transaction {
+  id Int @id @default(autoincrement())
+
+  invoiceId Int
+  invoice   Invoice @relation(fields: [invoiceId], references: [id])
+
+  inventoryId Int
+  inventory   Inventory @relation(fields: [inventoryId], references: [id])
+
+  itemQuantity Int   @default(1)
+  pricePer     Float
+}
+
+model Log {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  message String
+
+  timestamp DateTime @default(now())
+}
