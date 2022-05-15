@@ -1,49 +1,63 @@
-import React from 'react';
+import React, { Dispatch, SetStateAction } from 'react';
+import Link from 'next/link';
 
 import { Cash, List, ReportMoney } from 'tabler-icons-react';
-
-import { UnstyledButton, Group, ThemeIcon, Text } from '@mantine/core';
+import { UnstyledButton, Group, ThemeIcon, Text, MediaQuery, useMantineTheme } from '@mantine/core';
 
 interface NavbarLinkProps {
-  icon: React.ReactNode;
+  icon : React.ReactNode;
   color: string;
   label: string;
+  path : string;
+  closeNav(): void;
 }
 
-function NavbarLink({ icon, color, label }: NavbarLinkProps) {
+function NavbarLink({ icon, color, label, path, closeNav }: NavbarLinkProps) {
+  const theme = useMantineTheme();
+
   return (
-    <UnstyledButton
-      sx={(theme) => ({
-        display: 'block',
-        width: '100%',
-        padding: theme.spacing.xs,
-        borderRadius: theme.radius.sm,
-        color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
+    <Link href={path} passHref>
+      <UnstyledButton
+        onClick={() => closeNav()}
+        sx={(theme) => ({
+          display: 'block',
+          width: '100%',
+          padding: theme.spacing.xs,
+          borderRadius: theme.radius.sm,
+          color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
 
-        '&:hover': {
-          backgroundColor:
-            theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
-        },
-      })}
-    >
-      <Group>
-        <ThemeIcon color={color} variant="light">
-          {icon}
-        </ThemeIcon>
+          '&:hover': {
+            backgroundColor:
+              theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
+          },
+        })}
+      >
+        <Group>
+          <ThemeIcon size="lg" color={color} variant="light">
+            {icon}
+          </ThemeIcon>
 
-        <Text size="sm">{label}</Text>
-      </Group>
-    </UnstyledButton>
+          <Text>{label}</Text>
+        </Group>
+      </UnstyledButton>
+    </Link>
   );
 }
 
-const navbarLinks = [
-  { icon: <Cash size={16} />, color: 'green', label: 'POS' },
-  { icon: <List size={16} />, color: 'teal', label: 'Inventory' },
-  { icon: <ReportMoney size={16} />, color: 'blue', label: 'Reports' },
-];
+interface NavbarLinksProps {
+  closeNav(): void;
+}
 
-export default function NavbarLinks() {
-  const links = navbarLinks.map((link) => <NavbarLink {...link} key={link.label} />);
+export default function NavbarLinks({ closeNav }: NavbarLinksProps) {
+  const navbarLinks = [
+    { icon: <Cash        size={24} />, color: 'green', label: 'POS'      , path: '/' },
+    { icon: <List        size={24} />, color: 'teal',  label: 'Inventory', path: '/inventory' },
+    { icon: <ReportMoney size={24} />, color: 'blue',  label: 'Reports'  , path: '/' },
+  ];
+
+  const links = navbarLinks.map((link) => {
+    return <NavbarLink {...link} closeNav={closeNav} key={link.label} />;
+  });
+
   return <div>{links}</div>;
 }
