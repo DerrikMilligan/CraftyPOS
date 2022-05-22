@@ -1,8 +1,12 @@
 import type { NextPage } from 'next'
 
+import Scanner from 'components/Scanner';
+
 const Inventory: NextPage = () => {
   return (
-    <div>Hi from Inventory</div>
+    <div>
+      <Scanner></Scanner>
+    </div>
   );
 }
 

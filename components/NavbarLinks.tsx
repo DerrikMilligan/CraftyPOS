@@ -52,7 +52,7 @@ export default function NavbarLinks({ closeNav }: NavbarLinksProps) {
   const navbarLinks = [
     { icon: <Cash        size={24} />, color: 'green', label: 'POS'      , path: '/' },
     { icon: <List        size={24} />, color: 'teal',  label: 'Inventory', path: '/inventory' },
-    { icon: <ReportMoney size={24} />, color: 'blue',  label: 'Reports'  , path: '/' },
+    { icon: <ReportMoney size={24} />, color: 'blue',  label: 'Reports'  , path: '/scanner' },
   ];
 
   const links = navbarLinks.map((link) => {
