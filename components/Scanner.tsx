@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 
 import { Result } from '@zxing/library';
 import { BrowserMultiFormatReader, BrowserCodeReader, IScannerControls } from '@zxing/browser';
@@ -9,7 +9,7 @@ export default function Scanner() {
   const [ controls, setControls ] = useState<IScannerControls>();
   const [ isScanning, setIsScanning ] = useState(false);
   const [ scannedResult, setScannedResult ] = useState<Result>();
-  const previewEl = useRef<HTMLVideoElement>();
+  const previewEl = useRef<HTMLVideoElement>(null);
 
   const codeReader = new BrowserMultiFormatReader();
 
@@ -17,7 +17,7 @@ export default function Scanner() {
     if (selectedDevice === undefined)
       return console.error('No device selected');
 
-    if (previewEl.current === undefined)
+    if (previewEl.current === null)
       return console.error('no video element');
 
     setControls(await codeReader.decodeFromVideoDevice(
