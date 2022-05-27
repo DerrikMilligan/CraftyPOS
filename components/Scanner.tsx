@@ -43,13 +43,16 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
       codeReader.decodeFromVideoDevice(
         selectedDevice.deviceId,
         previewEl.current,
-        (result, error) => {
+        (result, error, controls) => {
           // If we just haven't found anything then just hangout
           if (error instanceof NotFoundException)
             return;
 
           // We found something so send it up!
           onScanned(result?.getText() || '__ScanError__');
+
+          // Right now how I'll always use it is to stop scanning when we find something
+          controls.stop();
         }
       ).then(setControls);
 
