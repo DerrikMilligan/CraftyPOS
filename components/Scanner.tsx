@@ -14,6 +14,8 @@ import {
   Text,
 } from '@mantine/core';
 
+import { useLocalStorage } from '@mantine/hooks';
+
 export interface IScannerProps {
   scanning?: boolean;
   onScanned?(text: string): void;
@@ -24,7 +26,7 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
   const [ selectedDevice, setSelectedDevice ] = useState<MediaDeviceInfo>();
   const [ controls, setControls ] = useState<IScannerControls>();
 
-  const lastCameraUsed = useRef<string | null>(null);
+  const [ lastCameraUsed, setLastCameraUsed ] = useLocalStorage<string | null>({ key: 'last-camera', defaultValue: null });
 
   const previewEl = useRef<HTMLVideoElement>(null);
   const codeReader = new BrowserMultiFormatReader();
@@ -37,7 +39,7 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
       if (previewEl.current === null)
         return console.error('no video element');
 
-      lastCameraUsed.current = selectedDevice.label;
+      setLastCameraUsed(selectedDevice.deviceId);
 
       codeReader.decodeFromVideoDevice(
         selectedDevice.deviceId,
@@ -73,8 +75,8 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
 
       setInputDevices(devices);
 
-      if (lastCameraUsed.current !== null)
-        setSelectedDevice(devices.find(device => device.label === lastCameraUsed.current) || devices[0]);
+      if (lastCameraUsed !== null)
+        setSelectedDevice(devices.find(device => device.deviceId === lastCameraUsed) || devices[0]);
       else
         setSelectedDevice(devices[0]);
     });
