@@ -78,6 +78,13 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
         setSelectedDevice(devices.find(device => device.deviceId === lastCameraUsed) || devices[0]);
       else
         setSelectedDevice(devices[0]);
+
+      return () => {
+        if (controls === undefined)
+          return console.error('No controls to stop');
+
+        controls.stop();
+      };
     });
   }, []);
 
