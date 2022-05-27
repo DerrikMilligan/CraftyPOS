@@ -46,7 +46,7 @@ export default function Scanner({ onScanned = (text) => {} }: IScannerProps) {
         }
 
         onScanned(result?.getText() || '__ScanError__');
-        console.log(result, error, controls);
+        // console.log(result, error, controls);
       }
     ));
 
@@ -76,34 +76,17 @@ export default function Scanner({ onScanned = (text) => {} }: IScannerProps) {
   }, []);
 
   return (
-    <Container>
-      <div style={{ position: 'absolute' }}>
-        <video ref={previewEl}></video>
-      </div>
-      <Group style={{ position: 'absolute' }}>
+    <>
+      <Group position="center">
         <NativeSelect
           m="xs"
           size="xs"
           data={inputDevices.map(device => device.label)}
+          onChange={event => setSelectedDevice(inputDevices.find(device => device.label == event.target.value))}
         ></NativeSelect>
+        <video style={{ width: '100%' }} ref={previewEl}></video>
       </Group>
-    </Container>
-
-    //   <select
-    //     onChange={(e) => setSelectedDevice(inputDevices.find((device) => device.deviceId === e.target.value))}
-    //   >
-    //     {
-    //       inputDevices.map((device, index) =>
-    //         <option key={index} value={device.deviceId}>
-    //           {device.label}
-    //         </option>
-    //       )
-    //     }
-    //   </select>
-    //   <div>
-    //     { scannedResult?.getText() || 'None' }
-    //   </div>
-    // </>
+    </>
   );
 }
 
