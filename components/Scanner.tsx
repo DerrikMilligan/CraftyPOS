@@ -25,7 +25,6 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
   const [ inputDevices, setInputDevices ] = useState<MediaDeviceInfo[]>([]);
   const [ selectedDevice, setSelectedDevice ] = useState<MediaDeviceInfo>();
   const [ controls, setControls ] = useState<IScannerControls>();
-
   const [ lastCameraUsed, setLastCameraUsed ] = useLocalStorage<string | null>({ key: 'last-camera', defaultValue: null });
 
   const previewEl = useRef<HTMLVideoElement>(null);
@@ -89,6 +88,7 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
           m="xs"
           size="xs"
           data={inputDevices.map(device => device.label)}
+          value={selectedDevice?.label}
           onChange={event => setSelectedDevice(inputDevices.find(device => device.label == event.target.value))}
         ></NativeSelect>
         <video style={{ width: '100%' }} ref={previewEl}></video>
