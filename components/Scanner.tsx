@@ -19,12 +19,12 @@ export interface IScannerProps {
   onScanned?(text: string): void;
 }
 
-let lastCameraUsed: string | null = null;
-
 export default function Scanner({ scanning = true, onScanned = () => {} }: IScannerProps) {
   const [ inputDevices, setInputDevices ] = useState<MediaDeviceInfo[]>([]);
   const [ selectedDevice, setSelectedDevice ] = useState<MediaDeviceInfo>();
   const [ controls, setControls ] = useState<IScannerControls>();
+
+  const lastCameraUsed = useRef<string | null>(null);
 
   const previewEl = useRef<HTMLVideoElement>(null);
   const codeReader = new BrowserMultiFormatReader();
@@ -37,7 +37,7 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
       if (previewEl.current === null)
         return console.error('no video element');
 
-      lastCameraUsed = selectedDevice.label;
+      lastCameraUsed.current = selectedDevice.label;
 
       codeReader.decodeFromVideoDevice(
         selectedDevice.deviceId,
@@ -73,8 +73,8 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
 
       setInputDevices(devices);
 
-      if (lastCameraUsed !== null)
-        setSelectedDevice(devices.find(device => device.label === lastCameraUsed) || devices[0]);
+      if (lastCameraUsed.current !== null)
+        setSelectedDevice(devices.find(device => device.label === lastCameraUsed.current) || devices[0]);
       else
         setSelectedDevice(devices[0]);
     });
