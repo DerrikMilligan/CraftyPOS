@@ -15,52 +15,53 @@ import {
 } from '@mantine/core';
 
 export interface IScannerProps {
+  scanning?: boolean;
   onScanned?(text: string): void;
-  width?: number;
-  height?: number;
 }
 
-export default function Scanner({ onScanned = (text) => {} }: IScannerProps) {
+let lastCameraUsed: string | null = null;
+
+export default function Scanner({ scanning = true, onScanned = () => {} }: IScannerProps) {
   const [ inputDevices, setInputDevices ] = useState<MediaDeviceInfo[]>([]);
   const [ selectedDevice, setSelectedDevice ] = useState<MediaDeviceInfo>();
   const [ controls, setControls ] = useState<IScannerControls>();
 
   const previewEl = useRef<HTMLVideoElement>(null);
-
   const codeReader = new BrowserMultiFormatReader();
 
-  const startScanning = async () => {
-    if (selectedDevice === undefined)
-      return console.error('No device selected');
+  useEffect(() => {
+    if (scanning === true) {
+      if (selectedDevice === undefined)
+        return console.error('No device selected');
 
-    if (previewEl.current === null)
-      return console.error('no video element');
+      if (previewEl.current === null)
+        return console.error('no video element');
 
-    setControls(await codeReader.decodeFromVideoDevice(
-      selectedDevice.deviceId,
-      previewEl.current,
-      (result, error, controls) => {
-        // If we just haven't found anything then just hangout
-        if (error instanceof NotFoundException) {
-          return;
+      lastCameraUsed = selectedDevice.label;
+
+      codeReader.decodeFromVideoDevice(
+        selectedDevice.deviceId,
+        previewEl.current,
+        (result, error) => {
+          // If we just haven't found anything then just hangout
+          if (error instanceof NotFoundException)
+            return;
+
+          // We found something so send it up!
+          onScanned(result?.getText() || '__ScanError__');
         }
+      ).then(setControls);
 
-        onScanned(result?.getText() || '__ScanError__');
-        // console.log(result, error, controls);
-      }
-    ));
+      console.log(`Started continous decode from camera with id ${selectedDevice.deviceId}`);
 
-    console.log(`Started continous decode from camera with id ${selectedDevice.deviceId}`);
-  };
+      return () => {
+        if (controls === undefined)
+          return console.error('No controls to stop');
 
-  const stopScanning = () => {
-    if (controls === undefined)
-      return console.error('No controls to stop');
-
-    controls.stop();
-  };
-
-  useEffect(() => { startScanning(); return stopScanning }, [ selectedDevice ]);
+        controls.stop();
+      };
+    }
+  }, [ selectedDevice, scanning ]);
 
   useEffect(() => {
     // Trigger the load for input devices on component mount
@@ -71,7 +72,11 @@ export default function Scanner({ onScanned = (text) => {} }: IScannerProps) {
       }
 
       setInputDevices(devices);
-      setSelectedDevice(devices[0]);
+
+      if (lastCameraUsed !== null)
+        setSelectedDevice(devices.find(device => device.label === lastCameraUsed) || devices[0]);
+      else
+        setSelectedDevice(devices[0]);
     });
   }, []);
 

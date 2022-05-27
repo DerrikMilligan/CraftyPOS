@@ -18,7 +18,7 @@ const Inventory: NextPage = () => {
         centered
         size="xl"
       >
-        <Scanner onScanned={(text) => { setScannedData(text); setScanning(false); }}></Scanner>
+        <Scanner scanning={scanning} onScanned={(text) => { setScannedData(text); setScanning(false); }}></Scanner>
       </Modal>
 
       <Group position="center">
