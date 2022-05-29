@@ -106,4 +106,3 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
     </>
   );
 }
-
