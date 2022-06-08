@@ -7,7 +7,7 @@ const squareClientId = process.env.SQUARE_CLIENT_ID;
 const callbackUrl    = process.env.SQUARE_CALLBACK_URL;
 
 const buildIntentLink = (os: OS, amount: Number) => {
-  if (os === 'android')
+  // if (os === 'android')
     return (
       <a href={
         `intent:#Intent;
@@ -47,7 +47,7 @@ const buildIntentLink = (os: OS, amount: Number) => {
 
   return (
     <a href="" onClick={() => window.location.assign(iosUrl) }>
-      Start Transaction
+      Start Transaction :)
     </a>
   );
 };
