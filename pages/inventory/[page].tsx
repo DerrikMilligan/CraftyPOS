@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/router';
 import type { NextPage, GetServerSideProps } from 'next'
 
-import { Card, Group, Table, Pagination } from '@mantine/core';
+import { Box, Button, Card, Group, Modal, Table, Pagination } from '@mantine/core';
 import { PrismaClient, Inventory, Vendor } from '.prisma/client';
 
 const prisma = new PrismaClient();
@@ -42,6 +42,7 @@ interface InventoryProps {
 
 const Inventory: NextPage<InventoryProps> = ({ inventory, totalPages, currentPage }) => {
   const router = useRouter();
+  const [ modalOpened, setModalOpened ] = useState(false);
 
   const rows = inventory.map((item) => (
     <tr key={ item.id }>
@@ -53,7 +54,20 @@ const Inventory: NextPage<InventoryProps> = ({ inventory, totalPages, currentPag
 
   return (
     <>
+      <Modal
+        centered
+        opened={modalOpened}
+        onClose={() => setModalOpened(false)}
+        size="lg"
+      >
+        <Box>
+          Hello
+        </Box>
+      </Modal>
+
       <Card p="lg">
+        <Button onClick={() => setModalOpened(true)}>Add New</Button>
+
         <Table>
           <thead>
             <tr>
