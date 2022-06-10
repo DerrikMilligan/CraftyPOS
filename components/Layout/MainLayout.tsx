@@ -9,6 +9,9 @@ import {
   useMantineTheme,
 } from '@mantine/core';
 
+import { NotificationsProvider } from '@mantine/notifications';
+import { ModalsProvider } from '@mantine/modals';
+
 import NavbarLinks from 'components/NavbarLinks';
 import Header from './Header';
 
@@ -38,31 +41,35 @@ export default function Layout({ children }: LayoutProps) {
         withNormalizeCSS
         theme={{ colorScheme: colorScheme }}
       >
-        <AppShell
-          styles={{
-            main: {
-              background: colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
-            },
-          }}
-          navbarOffsetBreakpoint="sm"
-          asideOffsetBreakpoint="sm"
-          fixed
-          header={
-            <Header
-              opened={opened}
-              setOpened={setOpened}
-              colorScheme={colorScheme}
-              toggleColorScheme={toggleColorScheme}
-            ></Header>
-          }
-          navbar={
-            <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
-              <NavbarLinks closeNav={() => setOpened(false)}></NavbarLinks>
-            </Navbar>
-          }
-        >
-          { children }
-        </AppShell>
+        <NotificationsProvider position="top-right">
+          <ModalsProvider>
+            <AppShell
+              styles={{
+                main: {
+                  background: colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+                },
+              }}
+              navbarOffsetBreakpoint="sm"
+              asideOffsetBreakpoint="sm"
+              fixed
+              header={
+                <Header
+                  opened={opened}
+                  setOpened={setOpened}
+                  colorScheme={colorScheme}
+                  toggleColorScheme={toggleColorScheme}
+                ></Header>
+              }
+              navbar={
+                <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
+                  <NavbarLinks closeNav={() => setOpened(false)}></NavbarLinks>
+                </Navbar>
+              }
+            >
+              { children }
+            </AppShell>
+          </ModalsProvider>
+        </NotificationsProvider>
       </MantineProvider>
     </>
   );

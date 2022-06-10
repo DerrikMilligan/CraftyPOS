@@ -1,34 +1,36 @@
 import { useState } from 'react';
-import type { GetServerSideProps, NextPage } from 'next'
+import type { NextPage } from 'next'
 
+import {
+  ActionIcon,
+  Box,
+  Button,
+  Card,
+  Group,
+  Loader,
+  Modal,
+  Kbd, 
+  Table,
+  Text,
+  TextInput,
+} from '@mantine/core';
 import { Mail, Pencil, X } from 'tabler-icons-react';
-import { ActionIcon, Box, Button, Card, Group, Modal, Table, TextInput, Title } from '@mantine/core';
 import { useForm } from '@mantine/form';
+import { useModals } from '@mantine/modals';
 
-import { PrismaClient, Vendor } from '.prisma/client';
+import { Vendor } from '@prisma/client';
 
+import { useVendors } from '../lib/hooks';
 
-const prisma = new PrismaClient();
-
-export const getServerSideProps: GetServerSideProps = async ({ query }) => {
-  const vendors = await prisma.vendor.findMany();
-
-  return {
-    props: {
-      vendors,
-    },
-  };
-};
-
-interface VendorProps {
-  vendors: Array<Vendor>;
-}
-
-const Vendors: NextPage<VendorProps> = ({ vendors }) => {
+const Vendors: NextPage = () => {
   const [ modalOpened, setModalOpened ] = useState(false);
+  const { isLoading, isError, vendors, deleteVendor, addVendor, updateVendor } = useVendors();
+  
+  const modals = useModals();
 
   const form = useForm({
     initialValues: {
+      id: 0,
       firstName: '',
       lastName: '',
       email: '',
@@ -39,22 +41,15 @@ const Vendors: NextPage<VendorProps> = ({ vendors }) => {
     },
   });
 
-  const submitNewVendor = form.onSubmit(async (values) => {
-    console.log(values);
-
-    const response = await fetch('/api/vendor/', {
-      method: 'POST',
-      headers: {
-        'Accept'      : 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(values),
-    });
-
-    const data = await response.json();
-    console.log(data);
-
+  const submitVendor = form.onSubmit(async (values) => {
     setModalOpened(false);
+    
+    const isNewVendor = values.id === 0;
+    
+    if (isNewVendor)
+      await addVendor(values);
+    else
+      await updateVendor(values);
   });
 
   const openModal = (vendor: Vendor|null = null) => {
@@ -62,6 +57,7 @@ const Vendors: NextPage<VendorProps> = ({ vendors }) => {
 
     if (vendor !== null)
       form.setValues({
+        id       : vendor.id,
         firstName: vendor.firstName,
         lastName : vendor.lastName,
         email    : vendor.email,
@@ -69,29 +65,14 @@ const Vendors: NextPage<VendorProps> = ({ vendors }) => {
 
     setModalOpened(true);
   };
-
-  const rows = vendors.map((vendor) => (
-    <tr key={ vendor.id }>
-      <td width="25" style={{ padding: 0 }}>
-        <ActionIcon
-          color="yellow"
-          onClick={() => openModal(vendor)}
-        >
-          <Pencil size="20"/>
-        </ActionIcon>
-      </td>
-      <td>{ vendor.id }</td>
-      <td>{ vendor.firstName }</td>
-      <td>{ vendor.lastName }</td>
-      <td width="25" style={{ padding: 0 }}>
-        <ActionIcon
-          color="red"
-        >
-          <X size="20"/>
-        </ActionIcon>
-      </td>
-    </tr>
-  ));
+  
+  // Handle the loading and error states
+  if (isLoading) return (
+    <Group position="center" mt={75}>
+      <Loader color="green" size="lg" />
+    </Group>
+  );
+  if (isError) return <div>Error! {isError}...</div>
 
   return (
     <>
@@ -99,11 +80,12 @@ const Vendors: NextPage<VendorProps> = ({ vendors }) => {
         centered
         opened={modalOpened}
         onClose={() => setModalOpened(false)}
-        title="Add New Vendor"
+        title={form.values.id === 0 ? 'Add New Vendor' : 'Update Vendor'}
         size="lg"
       >
         <Box>
-          <form onSubmit={submitNewVendor}>
+          <form onSubmit={submitVendor}>
+            <input type="hidden" {...form.getInputProps('id')} />
             <TextInput
               label="First Name"
               required
@@ -143,7 +125,43 @@ const Vendors: NextPage<VendorProps> = ({ vendors }) => {
             </tr>
           </thead>
           <tbody>
-            {rows}
+            {
+              vendors !== undefined &&
+              vendors.map((vendor) => (
+                <tr key={ vendor.id }>
+                  <td width="25" style={{ padding: 0 }}>
+                    <ActionIcon
+                      color="yellow"
+                      onClick={() => openModal(vendor)}
+                    >
+                      <Pencil size="20"/>
+                    </ActionIcon>
+                  </td>
+                  <td>{ vendor.id }</td>
+                  <td>{ vendor.firstName }</td>
+                  <td>{ vendor.lastName }</td>
+                  <td width="25" style={{ padding: 0 }}>
+                    <ActionIcon
+                      color="red"
+                      onClick={() => modals.openConfirmModal({
+                        title: 'Remove Vendor',
+                        centered: true,
+                        children: (
+                          <Text size="sm">
+                            Are you sure you want to delete <Kbd>{vendor.firstName} {vendor.lastName}</Kbd>?
+                          </Text>
+                        ),
+                        labels: { confirm: 'Remove Vendor', cancel: 'Cancel' },
+                        confirmProps: { color: 'red' },
+                        onConfirm: () => deleteVendor(vendor),
+                      })}
+                    >
+                      <X size="20"/>
+                    </ActionIcon>
+                  </td>
+                </tr>
+              ))
+            }
           </tbody>
         </Table>
       </Card>
