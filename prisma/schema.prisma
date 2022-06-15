@@ -2,9 +2,9 @@ generator client {
   provider = "prisma-client-js"
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+// }
 
 datasource db {
   provider = "postgresql"
@@ -44,19 +44,18 @@ model Vendor {
 }
 
 model Tag {
-  id          Int         @id @default(autoincrement())
-  name        String
-  displayName String
-  inventory   Inventory[]
+  id        Int         @id @default(autoincrement())
+  name      String
+  inventory Inventory[]
 }
 
 model Inventory {
   id          Int           @id @default(autoincrement())
-  displayName String
+  name        String
   stock       Int
   price       Float
-  vendorID    Int
-  vendor      Vendor        @relation(fields: [vendorID], references: [id])
+  vendorId    Int
+  vendor      Vendor        @relation(fields: [vendorId], references: [id])
   Transaction Transaction[]
   tags        Tag[]
 }
