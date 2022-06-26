@@ -1,8 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-import { PrismaClient, User } from '@prisma/client';
+import { User } from '@prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma } from '../../lib/db';
 
 type OS = 'android' | 'ios';
 

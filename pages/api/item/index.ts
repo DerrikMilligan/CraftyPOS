@@ -1,18 +1,18 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-import { PrismaClient, Inventory, Tag, Vendor } from '.prisma/client';
+import { Item, Tag, Vendor } from '.prisma/client';
 
-const prisma = new PrismaClient();
+import { prisma } from '../../../lib/db';
 
 const defaultRowsPerPage = 20;
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Inventory|Inventory[]|GenericResponse<null>>
+  res: NextApiResponse<Item & { Vendor: Vendor, Tags: Tag[] }|Pagination<Array<Item & { Vendor: Vendor, Tags: Tag[] }>>|GenericResponse<null>>
 ) {
   // Make sure we're posting
   if (req.method === 'POST') {
-    const { vendorId, price, stock, name, tags } = req.body;
+    const { vendorId, price, stock, name, Tags } = req.body;
 
     if (vendorId === undefined || price === undefined || stock === undefined || name === undefined)
       return res.status(500).json({ success: false, message: 'Missing required data' });
@@ -22,27 +22,15 @@ export default async function handler(
     if (vendor === null)
       return res.status(500).json({ success: false, message: 'Invalid vendor' });
 
-    // let tags: Tag[] = [];
-    // if (tagsRaw !== undefined && Array.isArray(tagsRaw)) {
-    //   for (const tagName of tagsRaw) {
-    //     let tag = await prisma.tag.findFirst({ where: { name: tagName } });
-    //
-    //     if (tag === null)
-    //       tag = await prisma.tag.create({ data: { name: tagName } });
-    //
-    //     tags.push(tag);
-    //   }
-    // }
-    
-    const item = await prisma.inventory.create({
+    const item = await prisma.item.create({
       data: {
         name,
         price,
         stock,
-        // tags: { connect: tags },
-        // tags: { connectOrCreate: tags.map((name: string) => ({ name })) },
         vendorId: vendor.id,
+        Tags: { connect: (Tags as Tag[]).map((t) => ({ id: t.id })) },
       },
+      include: { Vendor: true, Tags: true },
     });
 
     return res.status(200).json(item);
@@ -55,14 +43,20 @@ export default async function handler(
     const page = req.query?.page && (Number.parseInt(req.query.page) - 1) || 0;
     const resultsPerPage = req.query?.count && Number.parseInt(req.query.count) || defaultRowsPerPage;
 
-    const items = await prisma.inventory.findMany({
+    const items = await prisma.item.findMany({
       take: resultsPerPage,
       skip: page * resultsPerPage,
-      orderBy: { displayName: 'desc' },
-      include: { vendor: true, tags: true },
+      orderBy: { name: 'desc' },
+      include: { Vendor: true, Tags: true },
     });
+    
+    const totalItems = await prisma.item.count();
 
-    return res.status(200).json(items);
+    return res.status(200).json({
+      page,
+      totalPages: Math.ceil(totalItems / resultsPerPage),
+      data: items,
+    });
   }
 
   return res.status(500).json({ success: false, message: 'Invalid request' });

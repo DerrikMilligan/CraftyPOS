@@ -56,12 +56,7 @@ const Vendors: NextPage = () => {
     form.reset();
 
     if (vendor !== null)
-      form.setValues({
-        id       : vendor.id,
-        firstName: vendor.firstName,
-        lastName : vendor.lastName,
-        email    : vendor.email,
-      });
+      form.setValues(vendor);
 
     setModalOpened(true);
   };
@@ -121,7 +116,6 @@ const Vendors: NextPage = () => {
               <th>ID</th>
               <th>First Name</th>
               <th>Last Name</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -129,36 +123,36 @@ const Vendors: NextPage = () => {
               vendors !== undefined &&
               vendors.map((vendor) => (
                 <tr key={ vendor.id }>
-                  <td width="25" style={{ padding: 0 }}>
-                    <ActionIcon
-                      color="yellow"
-                      onClick={() => openModal(vendor)}
-                    >
-                      <Pencil size="20"/>
-                    </ActionIcon>
+                  <td width="50" style={{ padding: 0 }}>
+                    <div style={{ display: 'flex'}}>
+                      <ActionIcon
+                        color="red"
+                        onClick={() => modals.openConfirmModal({
+                          title: 'Remove Vendor',
+                          centered: true,
+                          children: (
+                            <Text size="sm">
+                              Are you sure you want to delete <Kbd>{vendor.firstName} {vendor.lastName}</Kbd>?
+                            </Text>
+                          ),
+                          labels: { confirm: 'Remove Vendor', cancel: 'Cancel' },
+                          confirmProps: { color: 'red' },
+                          onConfirm: () => deleteVendor(vendor),
+                        })}
+                      >
+                        <X size="20"/>
+                      </ActionIcon>
+                      <ActionIcon
+                        color="yellow"
+                        onClick={() => openModal(vendor)}
+                      >
+                        <Pencil size="20"/>
+                      </ActionIcon>
+                    </div>
                   </td>
                   <td>{ vendor.id }</td>
                   <td>{ vendor.firstName }</td>
                   <td>{ vendor.lastName }</td>
-                  <td width="25" style={{ padding: 0 }}>
-                    <ActionIcon
-                      color="red"
-                      onClick={() => modals.openConfirmModal({
-                        title: 'Remove Vendor',
-                        centered: true,
-                        children: (
-                          <Text size="sm">
-                            Are you sure you want to delete <Kbd>{vendor.firstName} {vendor.lastName}</Kbd>?
-                          </Text>
-                        ),
-                        labels: { confirm: 'Remove Vendor', cancel: 'Cancel' },
-                        confirmProps: { color: 'red' },
-                        onConfirm: () => deleteVendor(vendor),
-                      })}
-                    >
-                      <X size="20"/>
-                    </ActionIcon>
-                  </td>
                 </tr>
               ))
             }

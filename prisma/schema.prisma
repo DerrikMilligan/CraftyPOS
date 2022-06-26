@@ -23,7 +23,7 @@ model PaymentMethod {
   percentFee     Float     @default(0.0)
   roundToQuarter Boolean   @default(false)
   active         Boolean   @default(true)
-  Invoice        Invoice[]
+  Invoices       Invoice[]
 }
 
 model User {
@@ -32,32 +32,32 @@ model User {
   email          String @unique
   hashedPassword String
   role           Role   @default(USER)
-  Log            Log[]
+  Logs           Log[]
 }
 
 model Vendor {
-  id        Int         @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   firstName String
   lastName  String
   email     String
-  inventory Inventory[]
+  Items     Item[]
 }
 
 model Tag {
-  id        Int         @id @default(autoincrement())
-  name      String
-  inventory Inventory[]
+  id    Int    @id @default(autoincrement())
+  name  String
+  Items Item[]
 }
 
-model Inventory {
-  id          Int           @id @default(autoincrement())
-  name        String
-  stock       Int
-  price       Float
-  vendorId    Int
-  vendor      Vendor        @relation(fields: [vendorId], references: [id])
-  Transaction Transaction[]
-  tags        Tag[]
+model Item {
+  id           Int           @id @default(autoincrement())
+  name         String
+  stock        Int
+  price        Float
+  vendorId     Int
+  Vendor       Vendor        @relation(fields: [vendorId], references: [id])
+  Transactions Transaction[]
+  Tags         Tag[]
 }
 
 model Customer {
@@ -66,7 +66,7 @@ model Customer {
   lastName  String
   email     String
   phone     String
-  Invoice   Invoice[]
+  Invoices  Invoice[]
 }
 
 model Invoice {
@@ -81,19 +81,19 @@ model Invoice {
   bundleSubTotal  Float
   checkNumber     String
   timestamp       DateTime      @default(now())
-  customer        Customer      @relation(fields: [customerId], references: [id])
-  paymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
-  Transaction     Transaction[]
+  Customer        Customer      @relation(fields: [customerId], references: [id])
+  PaymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
+  Transactions    Transaction[]
 }
 
 model Transaction {
-  id           Int       @id @default(autoincrement())
+  id           Int     @id @default(autoincrement())
   invoiceId    Int
-  inventoryId  Int
-  itemQuantity Int       @default(1)
+  itemId       Int
+  itemQuantity Int     @default(1)
   pricePer     Float
-  inventory    Inventory @relation(fields: [inventoryId], references: [id])
-  invoice      Invoice   @relation(fields: [invoiceId], references: [id])
+  Item         Item    @relation(fields: [itemId], references: [id])
+  Invoice      Invoice @relation(fields: [invoiceId], references: [id])
 }
 
 model Log {
@@ -101,7 +101,7 @@ model Log {
   userId    Int
   message   String
   timestamp DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id])
+  User      User     @relation(fields: [userId], references: [id])
 }
 
 enum Role {
