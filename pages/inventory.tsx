@@ -112,6 +112,7 @@ const Inventory: NextPage = () => {
         title={form.values.id === 0 ? 'Add New Item' : 'Update Item'}
         size="lg"
       >
+       {/* Use the Box element to have media queries */}
         <Box>
           <form onSubmit={submitItem}>
             <input type="hidden" {...form.getInputProps('id')} />

@@ -39,6 +39,7 @@ model Vendor {
   id        Int    @id @default(autoincrement())
   firstName String
   lastName  String
+  color     String
   email     String
   Items     Item[]
 }

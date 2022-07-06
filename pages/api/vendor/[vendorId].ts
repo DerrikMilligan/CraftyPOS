@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   // Make sure we're posting
   if (req.method === 'PUT') {
-    const { id, firstName, lastName, email } = req.body;
+    const { id, firstName, lastName, email, color } = req.body;
 
     if (id === undefined || id <= 0 || firstName === undefined || lastName === undefined)
       return res.status(500).json({ success: false, message: 'Missing required data' });
@@ -19,6 +19,7 @@ export default async function handler(
       data: {
         firstName,
         lastName,
+        color,
         email: email || '',
       },
       where: { id },

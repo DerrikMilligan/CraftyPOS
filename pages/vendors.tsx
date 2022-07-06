@@ -9,10 +9,10 @@ import {
   Group,
   Loader,
   Modal,
-  Kbd, 
+  Kbd,
   Table,
   Text,
-  TextInput,
+  TextInput, ColorInput, DEFAULT_THEME, ColorSwatch,
 } from '@mantine/core';
 import { Mail, Pencil, X } from 'tabler-icons-react';
 import { useForm } from '@mantine/form';
@@ -34,6 +34,7 @@ const Vendors: NextPage = () => {
       firstName: '',
       lastName: '',
       email: '',
+      color: '',
     },
 
     validate: {
@@ -96,6 +97,13 @@ const Vendors: NextPage = () => {
               icon={<Mail size="14"/>}
               {...form.getInputProps('email')}
             />
+            <ColorInput
+              label="Icon Color"
+              required
+              disallowInput
+              swatches={[ '#fa5252', '#e64980', '#be4bdb', '#7950f2', '#4c6ef5', '#228be6', '#15aabf', '#12b886', '#40c057', '#82c91e', '#fab005', '#fd7e14' ]}
+              {...form.getInputProps('color')}
+            />
             <Group position="right" mt="lg">
               <Button color="green" type="submit">Save</Button>
               <Button color="red" onClick={() => setModalOpened(false)}>Cancel</Button>
@@ -116,6 +124,7 @@ const Vendors: NextPage = () => {
               <th>ID</th>
               <th>First Name</th>
               <th>Last Name</th>
+              <th>Color</th>
             </tr>
           </thead>
           <tbody>
@@ -153,6 +162,7 @@ const Vendors: NextPage = () => {
                   <td>{ vendor.id }</td>
                   <td>{ vendor.firstName }</td>
                   <td>{ vendor.lastName }</td>
+                  <td><ColorSwatch color={vendor.color} /></td>
                 </tr>
               ))
             }
