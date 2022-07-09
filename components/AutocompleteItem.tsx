@@ -1,5 +1,5 @@
 import { forwardRef } from 'react';
-import { Avatar, Badge, Container, Grid, Group, MantineColor, SelectItemProps, Text } from '@mantine/core';
+import { Avatar, Badge, Container, Grid, Group, SelectItemProps, Text } from '@mantine/core';
 
 import { Item, Tag, Vendor } from '@prisma/client';
 
