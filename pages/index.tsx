@@ -33,8 +33,14 @@ import {
   Vendor,
 } from '@prisma/client';
 
-import { USD } from '@dinero.js/currencies';
-import { dinero, add, multiply, subtract, toFormat, Dinero } from 'dinero.js';
+import {
+  $,
+  add,
+  formatMoney,
+  multiply,
+  percentage,
+  subtract, toNearestQuarter,
+} from '../lib/dineroHelpers';
 
 import Scanner from 'components/Scanner';
 import { AutocompleteItem, AutocompleteItemProps } from 'components/AutocompleteItem';
@@ -46,9 +52,6 @@ import useConfig from '../lib/hooks/useConfig';
 type Item        = pItem        & { Tags: Tag[], Vendor: Vendor };
 type Transaction = pTransaction & { Item: Item };
 type Invoice     = pInvoice     & { Customer: Customer, Transactions: Transaction[] };
-
-const $ = (amount: number) => dinero({ amount: amount * 100, currency: USD });
-const formatMoney = (d: Dinero<number>) => toFormat(d, ({ amount }) => amount.toFixed(2));
 
 const Checkout: NextPage = () => {
   const modals = useModals();
@@ -91,22 +94,20 @@ const Checkout: NextPage = () => {
   }, [ transactions ]);
   
   const salesTax = useMemo(() => {
-    // Weird way of doing percentages https://v2.dinerojs.com/docs/faq/how-do-i-calculate-a-percentage
-    return multiply(subTotal, { amount: config?.salesTaxRate ?? 0, scale: 2 } );
+    return percentage(subTotal, config?.salesTaxRate ?? 0);
   }, [ subTotal ]);
   
   const processingFees = useMemo(() => {
-    // Again we have to scale by 100% for the correct number here
-    const flatFee    = $(paymentMethod?.flatFee ?? 0);
-    const percentFee = { amount: paymentMethod?.percentFee ?? 0, scale: 2 };
-    
-    return add(flatFee, multiply(subTotal, percentFee));
+    return add($(paymentMethod?.flatFee ?? 0), percentage(subTotal, paymentMethod?.percentFee ?? 0));
   }, [ subTotal, paymentMethod ]);
   
   const total = useMemo(() => {
-    return add(subTotal, add(salesTax, processingFees));
-  }, [ subTotal, salesTax, processingFees ]);
-  
+    const sum = add(subTotal, add(salesTax, processingFees));
+
+    return paymentMethod?.name === 'Cash'
+      ? toNearestQuarter(sum)
+      : sum;
+  }, [ subTotal, salesTax, processingFees, paymentMethod ]);
   
   // Handle the loading and error states
   if (isLoading || paymentIsLoading || configIsLoading) return (
