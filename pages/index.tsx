@@ -95,7 +95,7 @@ const Checkout: NextPage = () => {
   
   const salesTax = useMemo(() => {
     return percentage(subTotal, config?.salesTaxRate ?? 0);
-  }, [ subTotal ]);
+  }, [ subTotal, config ]);
   
   const processingFees = useMemo(() => {
     return add($(paymentMethod?.flatFee ?? 0), percentage(subTotal, paymentMethod?.percentFee ?? 0));

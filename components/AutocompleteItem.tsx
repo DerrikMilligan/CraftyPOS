@@ -33,4 +33,6 @@ export const AutocompleteItem = forwardRef<HTMLDivElement, AutocompleteItemProps
   );
 });
 
+AutocompleteItem.displayName = 'AutocompleteItem';
+
 export default AutocompleteItem;
