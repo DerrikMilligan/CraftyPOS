@@ -1,23 +1,29 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { NextPage } from 'next'
+import produce from "immer"
 
 import { CurrencyDollar, Search, X } from 'tabler-icons-react';
 import {
   ActionIcon,
   Autocomplete,
-  AutocompleteItem as AutocompleteItemMantine, Badge,
+  AutocompleteItem as AutocompleteItemMantine,
+  Badge,
   Button,
   Card, Container,
   Group, Kbd,
   Loader,
-  Modal, NumberInput, ScrollArea, Space,
-  Table, Text,
+  Modal,
+  NativeSelect,
+  NumberInput,
+  ScrollArea,
+  Space,
+  Stack,
+  Table,
+  Text,
   Title,
 } from '@mantine/core';
 import { useModals } from '@mantine/modals';
 
-import Scanner from 'components/Scanner';
-import { AutocompleteItem, AutocompleteItemProps } from 'components/AutocompleteItem';
 import {
   Customer,
   Invoice as pInvoice,
@@ -27,38 +33,44 @@ import {
   Vendor,
 } from '@prisma/client';
 
-import useItems from '../lib/hooks/useItems';
+import { USD } from '@dinero.js/currencies';
+import { dinero, add, multiply, subtract, toFormat, Dinero } from 'dinero.js';
+
+import Scanner from 'components/Scanner';
+import { AutocompleteItem, AutocompleteItemProps } from 'components/AutocompleteItem';
 import { filterItems } from 'lib/filterItems';
+import useItems from '../lib/hooks/useItems';
+import usePaymentMethods from '../lib/hooks/usePaymentMethods';
+import useConfig from '../lib/hooks/useConfig';
 
 type Item        = pItem        & { Tags: Tag[], Vendor: Vendor };
 type Transaction = pTransaction & { Item: Item };
 type Invoice     = pInvoice     & { Customer: Customer, Transactions: Transaction[] };
 
+const $ = (amount: number) => dinero({ amount: amount * 100, currency: USD });
+const formatMoney = (d: Dinero<number>) => toFormat(d, ({ amount }) => amount.toFixed(2));
+
 const Checkout: NextPage = () => {
+  const modals = useModals();
+  
+  // Register the various states we have
   const [ itemFilter, setItemFilter ] = useState('');
   const [ scanning, setScanning ] = useState(false);
   const [ scannedData, setScannedData ] = useState('');
   const [ transactions, setTransactions ] = useState([] as Transaction[]);
+  const [ paymentMethodName, setPaymentMethodName ] = useState('Card');
+  const [ cashAmount, setCashAmount ] = useState(0);
   
-  const modals = useModals();
-
+  // Get the config and payment methods
+  // These should be cached indefinitely after the first time they're loaded
+  const { paymentMethods, isError: paymentIsError, isLoading: paymentIsLoading } = usePaymentMethods();
+  const { config, isError: configIsError, isLoading: configIsLoading } = useConfig();
+  
   // Get the items
   const { items, isLoading, isError } = useItems('all');
   
-  // const invoice = {
-  //   Transactions: [] as Transaction[],
-  // } as Invoice;
-
-  // Handle the loading and error states
-  if (isLoading) return (
-    <Group position="center" mt={75}>
-      <Loader color="green" size="lg" />
-    </Group>
-  );
-  if (isError) return <div>Error! {isError}...</div>
-
   // Make the list of items for the autocomplete to use
-  const autocompleteItems = items
+  const autocompleteItems = useMemo(() => items
     // Make sure any items we've added aren't part of the search list anymore
     ?.filter(item => transactions.find(t => t.itemId === item.id) === undefined)
     // Map them to the autocomplete type
@@ -68,24 +80,82 @@ const Checkout: NextPage = () => {
         key: item.id,
         item
       } as AutocompleteItemProps;
-    }) || [];
+    }) || [], [ items, transactions ]);
   
+  const paymentMethod = useMemo(() => paymentMethods?.find(method => method.name === paymentMethodName), [ paymentMethods, paymentMethodName ]);
+  
+  const subTotal = useMemo(() => {
+    return transactions.reduce((money, transaction) => {
+      return add(money, multiply($(transaction.pricePer), transaction.itemQuantity));
+    }, $(0));
+  }, [ transactions ]);
+  
+  const salesTax = useMemo(() => {
+    // Weird way of doing percentages https://v2.dinerojs.com/docs/faq/how-do-i-calculate-a-percentage
+    return multiply(subTotal, { amount: config?.salesTaxRate ?? 0, scale: 2 } );
+  }, [ subTotal ]);
+  
+  const processingFees = useMemo(() => {
+    // Again we have to scale by 100% for the correct number here
+    const flatFee    = $(paymentMethod?.flatFee ?? 0);
+    const percentFee = { amount: paymentMethod?.percentFee ?? 0, scale: 2 };
+    
+    return add(flatFee, multiply(subTotal, percentFee));
+  }, [ subTotal, paymentMethod ]);
+  
+  const total = useMemo(() => {
+    return add(subTotal, add(salesTax, processingFees));
+  }, [ subTotal, salesTax, processingFees ]);
+  
+  
+  // Handle the loading and error states
+  if (isLoading || paymentIsLoading || configIsLoading) return (
+    <Group position="center" mt={75}>
+      <Loader color="green" size="lg" />
+    </Group>
+  );
+  if (isError || paymentIsError || configIsError) return <div>Error! {isError}...</div>
+
+  /**
+   * Add an item from the autocomplete component to the invoice transactions
+   * 
+   * @param autocompleteItem
+   */
   const addItemToInvoice = (autocompleteItem: AutocompleteItemProps) => {
+    // Wipe out the search filter
     setItemFilter('');
     
-    setTransactions([
-      ...transactions,
-      {
-        id: 0,
-        invoiceId: 0,
-        itemId: autocompleteItem.item.id,
-        itemQuantity: 1,
-        pricePer: autocompleteItem.item.price,
-        Item: autocompleteItem.item,
-      }
-    ]);
-    
-    console.log(transactions);
+    // Add 
+    setTransactions(
+      produce(draft => {
+        draft.push({
+          id: 0,
+          invoiceId: 0,
+          itemId: autocompleteItem.item.id,
+          itemQuantity: 1,
+          pricePer: autocompleteItem.item.price,
+          Item: autocompleteItem.item,
+        });
+      })
+    );
+  };
+  
+  /**
+   * Allows for updating a transaction field dynamically using the immer produce which
+   * will modify the list in place
+   * 
+   * @param itemId
+   * @param field
+   * @param value
+   */
+  const updateTransaction = (itemId: number, field: keyof Transaction, value: any) => {
+    setTransactions(
+      produce(draft => {
+        const transaction = draft.find(t => t.itemId === itemId);
+        if (transaction !== undefined && value !== undefined)
+          transaction[field] = value;
+      })
+    );
   };
   
   return (
@@ -130,7 +200,7 @@ const Checkout: NextPage = () => {
               placeholder="Search for items..."
               icon={<Search size={16} />}
               limit={10}
-              initiallyOpened
+              // initiallyOpened
             />
           </Group>
           
@@ -142,9 +212,9 @@ const Checkout: NextPage = () => {
               <tr>
                 <th style={{ width: '10px' }}></th>
                 <th style={{ width: '50px' }}>Quant</th>
-                <th style={{ minWidth: '100px' }}>Price</th>
-                <th style={{ width: '300px;'}}>Item</th>
-                <th align="right" style={{ minWidth: '100px' }}>Total</th>
+                <th style={{ width: '100px', minWidth: '90px' }}>Price</th>
+                <th style={{ minWidth: '300px'}}>Item</th>
+                <th align="right" style={{ width: '100px' }}>Total</th>
               </tr>
               </thead>
               <tbody>
@@ -155,6 +225,7 @@ const Checkout: NextPage = () => {
                   <tr key={transaction.Item.id}>
                     <td style={{ padding: 0 }}>
                       <ActionIcon
+                        tabIndex={-1}
                         size={14}
                         color="red"
                         onClick={() => modals.openConfirmModal({
@@ -177,10 +248,11 @@ const Checkout: NextPage = () => {
                     <td>
                       <Group spacing={1} position="center">
                         <NumberInput
+                          variant="filled"
                           hideControls
                           size="xs"
                           value={transaction.itemQuantity}
-                          onChange={(val) => setTransactions([ ...transactions.filter(t => t.itemId !== transaction.itemId), { ...transaction, itemQuantity: val || 0 }])}
+                          onChange={(val) => updateTransaction(transaction.Item.id, 'itemQuantity', val)}
                           min={0}
                           styles={{ input: { textAlign: 'center' } }}
                           // styles={{ input: { width: '30px', padding: 0, textAlign: 'center' } }}
@@ -192,7 +264,7 @@ const Checkout: NextPage = () => {
                       <NumberInput
                         hideControls
                         value={transaction.pricePer}
-                        onChange={(val) => setTransactions([ ...transactions.filter(t => t.itemId !== transaction.itemId), { ...transaction, pricePer: val || 0 }])}
+                        onChange={(val) => updateTransaction(transaction.Item.id, 'pricePer', val)}
                         size="xs"
                         iconWidth={20}
                         icon={<CurrencyDollar size={12} color="lime" />}
@@ -209,7 +281,7 @@ const Checkout: NextPage = () => {
                           transaction.Item.Tags &&
                           transaction.Item.Tags.length > 0 &&
                           transaction.Item.Tags.map((tag) => (
-                            <Badge size="xs" color="green">{tag.name}</Badge>
+                            <Badge key={tag.id} size="xs" color="green">{tag.name}</Badge>
                           ))
                         }
                       </Group>
@@ -230,37 +302,71 @@ const Checkout: NextPage = () => {
                 <td colSpan={4} align="right">Sub Total:</td>
                 <td>
                   <CurrencyDollar size={12} color="lime" />
-                  {
-                    transactions.reduce((total, transaction) => {
-                      return total + (Math.round(transaction.pricePer * transaction.itemQuantity * 100) / 100);
-                    }, 0)
-                  }
+                  {formatMoney(subTotal)}
                 </td>
               </tr>
               <tr style={{ lineHeight: 0.5 }}>
                 <td colSpan={4} align="right">Tax:</td>
                 <td>
                   <CurrencyDollar size={12} color="lime" />
-                  1230.00
+                  {formatMoney(salesTax)}
                 </td>
               </tr>
               <tr style={{ lineHeight: 0.5 }}>
                 <td colSpan={4} align="right">Fees:</td>
                 <td>
                   <CurrencyDollar size={12} color="lime" />
-                  1230.00
+                  {formatMoney(processingFees)}
                 </td>
               </tr>
               <tr style={{ lineHeight: 0.5 }}>
                 <td colSpan={4} align="right">Total:</td>
                 <td>
                   <CurrencyDollar size={12} color="lime" />
-                  1230.00
+                  {formatMoney(total)}
                 </td>
               </tr>
               </tbody>
             </Table>
           </ScrollArea>
+          
+          <Space h="md" />
+          
+          <Group position="right" align="center">
+            <NativeSelect
+              label="Payment Method"
+              size="xs"
+              data={paymentMethods?.map(method => method.name) || []}
+              value={paymentMethodName}
+              onChange={(event) => setPaymentMethodName(event.target.value)}
+            ></NativeSelect>
+
+          {
+            paymentMethodName === 'Cash' &&
+            (
+              <>
+                <NumberInput
+                  label="Cash Given"
+                  size="xs"
+                  iconWidth={20}
+                  icon={<CurrencyDollar size={12} color="lime" />}
+                  min={0}
+                  precision={2}
+                  value={cashAmount}
+                  onChange={val => setCashAmount(val || 0)}
+                ></NumberInput>
+                <Stack>
+                  <Text size="xs">Change:</Text>
+                  <Group>
+                    <CurrencyDollar size={12} color="lime" />
+                    <Text size="xs">{formatMoney(subtract($(cashAmount), total))}</Text>
+                  </Group>
+                </Stack>
+              </>
+            )
+          }
+          
+          </Group>
 
           <Space h="md" />
 

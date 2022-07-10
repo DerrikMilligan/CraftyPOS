@@ -15,10 +15,10 @@ import {
   NativeSelect,
   NumberInput, SelectItem, MultiSelect, ActionIcon, Text, Kbd, ScrollArea,
 } from '@mantine/core';
-
-import { CurrencyDollar, Pencil, X } from 'tabler-icons-react';
 import { useModals } from '@mantine/modals';
 import { useForm } from '@mantine/form';
+import { CurrencyDollar, Pencil, X } from 'tabler-icons-react';
+
 import { Item, Tag, Vendor } from '@prisma/client';
 
 import { useVendors } from '../lib/hooks';
