@@ -13,7 +13,7 @@ import {
   Loader,
   TextInput,
   NativeSelect,
-  NumberInput, SelectItem, MultiSelect, ActionIcon, Text, Kbd, ScrollArea,
+  NumberInput, SelectItem, MultiSelect, ActionIcon, Text, Kbd, ScrollArea, Container, Stack,
 } from '@mantine/core';
 import { useModals } from '@mantine/modals';
 import { useForm } from '@mantine/form';
@@ -24,6 +24,7 @@ import { Item, Tag, Vendor } from '@prisma/client';
 import { useVendors } from '../lib/hooks';
 import useItems from '../lib/hooks/useItems';
 import useTags from '../lib/hooks/useTags';
+import { signIn, useSession } from 'next-auth/react';
 
 const vendorToSelectItem = (v: Vendor): SelectItem => {
   return {
@@ -39,6 +40,7 @@ const Inventory: NextPage = () => {
   const { vendors } = useVendors();
   const { tags, addTag } = useTags();
 
+  const { status: authStatus } = useSession();
   const modals = useModals();
 
   const form = useForm({
@@ -55,6 +57,32 @@ const Inventory: NextPage = () => {
     // },
   });
 
+  // Handle the loading and error states
+  if (authStatus === 'unauthenticated') return (
+    <Container p={0}>
+      <Card p="lg">
+        <Stack align="center">
+          <Text align="center">You are not authorized to view this page!</Text>
+          <Button onClick={() => signIn()}>Click here to sign in</Button>
+        </Stack>
+      </Card>
+    </Container>
+  );
+  if (isError) return (
+    <Container p={0}>
+      <Card p="lg">
+        <Stack align="center">
+          <Text align="center">Error! {(isError || { message: 'Unknown Error'})?.info?.message}</Text>
+        </Stack>
+      </Card>
+    </Container>
+  )
+  if (authStatus === 'loading' || isLoading) return (
+    <Group position="center" mt={75}>
+      <Loader color="green" size="lg" />
+    </Group>
+  );
+
   const openModal = (item: Item & { Vendor: Vendor, Tags: Tag[] } | null = null) => {
     form.reset();
 
@@ -66,22 +94,22 @@ const Inventory: NextPage = () => {
 
   const submitItem = form.onSubmit(async (values) => {
     setModalOpened(false);
-    
+
     const isNewItem = values.id === 0;
-    
+
     if (isNewItem)
       await addItem(values);
     else
       await updateItem(values);
   });
-  
+
   // Create a tag and wait for the response and add it to the form
   const createTag = async (tagName: string) => {
     const tag = await addTag({ name: tagName } as Tag);
     if (tag)
       form.setValues({ ...form.values, Tags: [ ...form.values.Tags, tag ] })
   };
-  
+
   // When tags change we get a list of strings, and we can get a bogus one that hasn't finished
   // being created yet.
   const tagsChanged = async (tagNames: string[]) => {
@@ -93,14 +121,6 @@ const Inventory: NextPage = () => {
         .filter(t => t !== undefined) as Tag[]
     });
   };
-
-  // Handle the loading and error states
-  if (isLoading) return (
-    <Group position="center" mt={75}>
-      <Loader color="green" size="lg" />
-    </Group>
-  );
-  if (isError) return <div>Error! {isError}...</div>
 
   // @ts-ignore
   return (

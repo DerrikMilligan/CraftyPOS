@@ -8,9 +8,23 @@ const headers = {
 type HttpMethods = 'POST' | 'GET' | 'DELETE' | 'PUT' | 'PATCH';
 
 const jsonFetcher = (method: HttpMethods, body: string) => {
-  return (url: string) =>
-    fetch(url, { method, headers, body })
-      .then((res) => res.json());
+  return async (url: string) => {
+    const response = await fetch(url, { method, headers, body });
+    
+    if (!response.ok) {
+      const error = new Error(`HTTP '${method}' to '${url}' had an error!`);
+      
+      // Ignoring because they suggest this https://swr.vercel.app/docs/error-handling
+      // @ts-ignore
+      error.info = await response.json();
+      // @ts-ignore
+      error.status = response.status;
+      
+      throw error;
+    }
+    
+    return await response.json();
+  };
 };
 
 export const getFetcher    = (data: any = undefined) => jsonFetcher('GET',    JSON.stringify(data));

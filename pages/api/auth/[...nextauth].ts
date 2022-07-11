@@ -44,7 +44,8 @@ export default NextAuth({
     async jwt({ token, user }) {
       // First time the JWT callback is run we have the user object
       if (user) {
-        token.id = user.id;
+        token.id   = user.id;
+        token.role = user.role;
       }
 
       return token;
@@ -52,7 +53,8 @@ export default NextAuth({
 
     async session({ session, token }) {
       if (token) {
-        session.id = token.id;
+        session.id   = token.id;
+        session.role = token.role;
       }
 
       return session;

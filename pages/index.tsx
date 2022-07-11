@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import type { NextPage } from 'next'
+import { signIn, useSession } from 'next-auth/react';
 import produce from "immer"
 
 import { CurrencyDollar, Search, X } from 'tabler-icons-react';
@@ -9,8 +10,10 @@ import {
   AutocompleteItem as AutocompleteItemMantine,
   Badge,
   Button,
-  Card, Container,
-  Group, Kbd,
+  Card,
+  Container,
+  Group,
+  Kbd,
   Loader,
   Modal,
   NativeSelect,
@@ -19,10 +22,12 @@ import {
   Space,
   Stack,
   Table,
-  Text, TextInput,
+  Text,
+  TextInput,
   Title,
 } from '@mantine/core';
 import { useModals } from '@mantine/modals';
+import { showNotification } from '@mantine/notifications';
 
 import {
   $,
@@ -43,10 +48,12 @@ import usePaymentMethods from '../lib/hooks/usePaymentMethods';
 import useConfig from '../lib/hooks/useConfig';
 
 import type { Transaction, Invoice } from '../lib/db';
-import { showNotification } from '@mantine/notifications';
+import Link from 'next/link';
 
 const Checkout: NextPage = () => {
   const modals = useModals();
+  
+  const { status: authStatus } = useSession();
   
   // Register the various states we have
   const [ itemFilter, setItemFilter ] = useState('');
@@ -78,7 +85,9 @@ const Checkout: NextPage = () => {
       } as AutocompleteItemProps;
     }) || [], [ items, transactions ]);
   
-  const paymentMethod = useMemo(() => paymentMethods?.find(method => method.name === paymentMethodName), [ paymentMethods, paymentMethodName ]);
+  console.log(paymentMethods);
+  
+  const paymentMethod = useMemo(() => (Array.isArray(paymentMethods) ? paymentMethods : []).find(method => method.name === paymentMethodName), [ paymentMethods, paymentMethodName ]);
   
   const subTotal = useMemo(() => calculateSubTotal(transactions), [ transactions ]);
   const salesTax = useMemo(() => calculateSalesTax(subTotal, config), [ subTotal, config ]);
@@ -86,12 +95,30 @@ const Checkout: NextPage = () => {
   const total = useMemo(() => calculateTotal(subTotal, salesTax, processingFees, paymentMethod), [  subTotal, salesTax, processingFees, paymentMethod  ]);
   
   // Handle the loading and error states
-  if (isLoading || paymentIsLoading || configIsLoading) return (
+  if (authStatus === 'unauthenticated') return (
+    <Container p={0}>
+      <Card p="lg">
+        <Stack align="center">
+          <Text align="center">You are not authorized to view this page!</Text>
+          <Button onClick={() => signIn()}>Click here to sign in</Button>
+        </Stack>
+      </Card>
+    </Container>
+  );
+  if (isError || paymentIsError || configIsError) return (
+    <Container p={0}>
+      <Card p="lg">
+        <Stack align="center">
+          <Text align="center">Error! {(isError || paymentIsError || configIsError || { message: 'Unknown Error'})?.info?.message}</Text>
+        </Stack>
+      </Card>
+    </Container>
+  )
+  if (authStatus === 'loading' || isLoading || paymentIsLoading || configIsLoading) return (
     <Group position="center" mt={75}>
       <Loader color="green" size="lg" />
     </Group>
   );
-  if (isError || paymentIsError || configIsError) return <div>Error! {isError}...</div>
 
   /**
    * Add an item from the autocomplete component to the invoice transactions

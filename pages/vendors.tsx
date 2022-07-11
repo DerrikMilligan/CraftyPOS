@@ -12,7 +12,7 @@ import {
   Kbd,
   Table,
   Text,
-  TextInput, ColorInput, DEFAULT_THEME, ColorSwatch,
+  TextInput, ColorInput, DEFAULT_THEME, ColorSwatch, Container, Stack,
 } from '@mantine/core';
 import { Mail, Pencil, X } from 'tabler-icons-react';
 import { useForm } from '@mantine/form';
@@ -21,11 +21,13 @@ import { useModals } from '@mantine/modals';
 import { Vendor } from '@prisma/client';
 
 import { useVendors } from '../lib/hooks';
+import { signIn, useSession } from 'next-auth/react';
 
 const Vendors: NextPage = () => {
   const [ modalOpened, setModalOpened ] = useState(false);
   const { isLoading, isError, vendors, deleteVendor, addVendor, updateVendor } = useVendors();
-  
+
+  const { status: authStatus } = useSession();
   const modals = useModals();
 
   const form = useForm({
@@ -42,11 +44,37 @@ const Vendors: NextPage = () => {
     },
   });
 
+  // Handle the loading and error states
+  if (authStatus === 'unauthenticated') return (
+    <Container p={0}>
+      <Card p="lg">
+        <Stack align="center">
+          <Text align="center">You are not authorized to view this page!</Text>
+          <Button onClick={() => signIn()}>Click here to sign in</Button>
+        </Stack>
+      </Card>
+    </Container>
+  );
+  if (isError) return (
+    <Container p={0}>
+      <Card p="lg">
+        <Stack align="center">
+          <Text align="center">Error! {(isError || { message: 'Unknown Error'})?.info?.message}</Text>
+        </Stack>
+      </Card>
+    </Container>
+  )
+  if (authStatus === 'loading' || isLoading) return (
+    <Group position="center" mt={75}>
+      <Loader color="green" size="lg" />
+    </Group>
+  );
+  
   const submitVendor = form.onSubmit(async (values) => {
     setModalOpened(false);
-    
+
     const isNewVendor = values.id === 0;
-    
+
     if (isNewVendor)
       await addVendor(values);
     else
@@ -61,14 +89,7 @@ const Vendors: NextPage = () => {
 
     setModalOpened(true);
   };
-  
-  // Handle the loading and error states
-  if (isLoading) return (
-    <Group position="center" mt={75}>
-      <Loader color="green" size="lg" />
-    </Group>
-  );
-  if (isError) return <div>Error! {isError}...</div>
+
 
   return (
     <>

@@ -1,7 +1,7 @@
 import React, { Dispatch, SetStateAction } from 'react';
 import Link from 'next/link';
 
-import { Box, Cash, List, ReportMoney, TestPipe } from 'tabler-icons-react';
+import { Box, Cash, List, ReportMoney, TestPipe, User } from 'tabler-icons-react';
 import { UnstyledButton, Group, ThemeIcon, Text, MediaQuery, useMantineTheme } from '@mantine/core';
 
 interface NavbarLinkProps {
@@ -52,9 +52,10 @@ export default function NavbarLinks({ closeNav }: NavbarLinksProps) {
   const navbarLinks = [
     { icon: <Cash        size={24} />, color: 'green', label: 'POS'      , path: '/' },
     { icon: <List        size={24} />, color: 'teal',  label: 'Inventory', path: '/inventory' },
-    { icon: <ReportMoney size={24} />, color: 'blue',  label: 'Reports'  , path: '/reports' },
-    { icon: <TestPipe    size={24} />, color: 'blue',  label: 'Testing'  , path: '/testing' },
+    // { icon: <ReportMoney size={24} />, color: 'blue',  label: 'Reports'  , path: '/reports' },
+    // { icon: <TestPipe    size={24} />, color: 'blue',  label: 'Testing'  , path: '/testing' },
     { icon: <Box         size={24} />, color: 'lime',  label: 'Vendors'  , path: '/vendors' },
+    { icon: <User        size={24} />, color: 'red',   label: 'Admin'    , path: '/admin' },
   ];
 
   const links = navbarLinks.map((link) => {

@@ -57,9 +57,8 @@ const credentialsAreValid = async ({ email, username, password }: UserCredential
  */
 const createUser = async ({ username, password, email, role = Role.USER }: UserCredentials): Promise<GenericResponse<User>> => {
   // Verify the only non-required piece of data
-  if (email === undefined) {
+  if (email === undefined)
     return { success: false, message: 'email required' };
-  }
 
   // See if the user exists
   let user = await prisma.user.findFirst({
@@ -72,9 +71,8 @@ const createUser = async ({ username, password, email, role = Role.USER }: UserC
   });
 
   // If so then let the admin know
-  if (user !== null) {
+  if (user !== null)
     return { success: false, message: 'username/email already registered' };
-  }
 
   // Hash the pass
   const hashedPassword = await bcrypt.hash(password, saltRounds);
@@ -83,9 +81,8 @@ const createUser = async ({ username, password, email, role = Role.USER }: UserC
   user = await prisma.user.create({ data: { username, hashedPassword, email, role } });
 
   // If there was a problem, let someone know
-  if (user === null) {
+  if (user === null)
     return { success: false, message: 'failed to create user' };
-  }
 
   return { success: true, data: user };
 };
