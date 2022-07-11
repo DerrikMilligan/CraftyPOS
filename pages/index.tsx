@@ -19,27 +19,20 @@ import {
   Space,
   Stack,
   Table,
-  Text,
+  Text, TextInput,
   Title,
 } from '@mantine/core';
 import { useModals } from '@mantine/modals';
 
 import {
-  Customer,
-  Invoice as pInvoice,
-  Item as pItem,
-  Tag,
-  Transaction as pTransaction,
-  Vendor,
-} from '@prisma/client';
-
-import {
   $,
-  add,
+  calculateProcessingFees,
+  calculateSalesTax,
+  calculateSubTotal,
+  calculateTotal,
   formatMoney,
-  multiply,
-  percentage,
-  subtract, toNearestQuarter,
+  moneyToNumber,
+  subtract
 } from '../lib/dineroHelpers';
 
 import Scanner from 'components/Scanner';
@@ -49,9 +42,8 @@ import useItems from '../lib/hooks/useItems';
 import usePaymentMethods from '../lib/hooks/usePaymentMethods';
 import useConfig from '../lib/hooks/useConfig';
 
-type Item        = pItem        & { Tags: Tag[], Vendor: Vendor };
-type Transaction = pTransaction & { Item: Item };
-type Invoice     = pInvoice     & { Customer: Customer, Transactions: Transaction[] };
+import type { Transaction, Invoice } from '../lib/db';
+import { showNotification } from '@mantine/notifications';
 
 const Checkout: NextPage = () => {
   const modals = useModals();
@@ -63,6 +55,7 @@ const Checkout: NextPage = () => {
   const [ transactions, setTransactions ] = useState([] as Transaction[]);
   const [ paymentMethodName, setPaymentMethodName ] = useState('Card');
   const [ cashAmount, setCashAmount ] = useState(0);
+  const [ checkNumber, setCheckNumber ] = useState('');
   
   // Get the config and payment methods
   // These should be cached indefinitely after the first time they're loaded
@@ -87,27 +80,10 @@ const Checkout: NextPage = () => {
   
   const paymentMethod = useMemo(() => paymentMethods?.find(method => method.name === paymentMethodName), [ paymentMethods, paymentMethodName ]);
   
-  const subTotal = useMemo(() => {
-    return transactions.reduce((money, transaction) => {
-      return add(money, multiply($(transaction.pricePer), transaction.itemQuantity));
-    }, $(0));
-  }, [ transactions ]);
-  
-  const salesTax = useMemo(() => {
-    return percentage(subTotal, config?.salesTaxRate ?? 0);
-  }, [ subTotal, config ]);
-  
-  const processingFees = useMemo(() => {
-    return add($(paymentMethod?.flatFee ?? 0), percentage(subTotal, paymentMethod?.percentFee ?? 0));
-  }, [ subTotal, paymentMethod ]);
-  
-  const total = useMemo(() => {
-    const sum = add(subTotal, add(salesTax, processingFees));
-
-    return paymentMethod?.name === 'Cash'
-      ? toNearestQuarter(sum)
-      : sum;
-  }, [ subTotal, salesTax, processingFees, paymentMethod ]);
+  const subTotal = useMemo(() => calculateSubTotal(transactions), [ transactions ]);
+  const salesTax = useMemo(() => calculateSalesTax(subTotal, config), [ subTotal, config ]);
+  const processingFees = useMemo(() => calculateProcessingFees(subTotal, paymentMethod), [ subTotal, paymentMethod ])
+  const total = useMemo(() => calculateTotal(subTotal, salesTax, processingFees, paymentMethod), [  subTotal, salesTax, processingFees, paymentMethod  ]);
   
   // Handle the loading and error states
   if (isLoading || paymentIsLoading || configIsLoading) return (
@@ -157,6 +133,60 @@ const Checkout: NextPage = () => {
           transaction[field] = value;
       })
     );
+  };
+
+  /**
+   * Reset the invoice to the default values
+   */
+  const resetInvoice = () => {
+    setTransactions([]);
+    setCashAmount(0);
+    setCheckNumber('');
+    setPaymentMethodName('Card');
+  };
+
+  /**
+   * Save an invoice with the current items
+   */
+  const saveInvoice = async () => {
+    if (paymentMethod === undefined)
+      return console.error('No payment method for some reason');
+    
+    const invoice = {
+      checkNumber: checkNumber,
+      paymentMethodId: paymentMethod.id,
+      subTotal: moneyToNumber(subTotal),
+      salesTax: moneyToNumber(salesTax),
+      processingFees: moneyToNumber(processingFees),
+      total: moneyToNumber(total),
+      Transactions: transactions,
+    } as Invoice;
+    
+    const response = await fetch('/api/invoice', {
+      method: 'POST',
+      body: JSON.stringify(invoice),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      }
+    });
+    
+    const body = await response.json();
+    
+    if (body?.success === false) {
+      showNotification({
+        title: 'Uh Oh!',
+        color: 'red',
+        message: body?.message || '',
+      });
+    } else {
+      showNotification({
+        title: 'Awesome!',
+        color: 'green',
+        message: 'Invoice saved successfully!',
+      });
+      resetInvoice();
+    }
   };
   
   return (
@@ -215,7 +245,7 @@ const Checkout: NextPage = () => {
                 <th style={{ width: '50px' }}>Quant</th>
                 <th style={{ width: '100px', minWidth: '90px' }}>Price</th>
                 <th style={{ minWidth: '300px'}}>Item</th>
-                <th align="right" style={{ width: '100px' }}>Total</th>
+                <th align="right" style={{ width: '100px', minWidth: '100px' }}>Total</th>
               </tr>
               </thead>
               <tbody>
@@ -366,14 +396,53 @@ const Checkout: NextPage = () => {
               </>
             )
           }
-          
+
+          {
+            paymentMethodName === 'Check' &&
+            (
+              <TextInput
+                label="Check Number"
+                size="xs"
+                value={checkNumber}
+                onChange={event => setCheckNumber(event.target.value)}
+              ></TextInput>
+            )
+          }
+        
           </Group>
 
           <Space h="md" />
 
           <Group position="right">
-            <Button color="red">Clear Invoice</Button>
-            <Button>Submit Invoice</Button>
+            <Button
+              color="red"
+              onClick={() => modals.openConfirmModal({
+                title: 'Clear Invoice',
+                centered: true,
+                children: (
+                  <Text size="sm" color="red">Are you sure you want to clear this invoice?</Text>
+                ),
+                labels: { confirm: 'Clear Invoice', cancel: 'Cancel' },
+                confirmProps: { color: 'red' },
+                onConfirm: resetInvoice,
+              })}
+            >
+              Clear Invoice
+            </Button>
+            <Button
+              onClick={() => modals.openConfirmModal({
+                title: 'Save Invoice',
+                centered: true,
+                children: (
+                  <Text size="sm">Are you sure you want to save this invoice?</Text>
+                ),
+                labels: { confirm: 'Save Invoice', cancel: 'Cancel' },
+                confirmProps: { color: 'green' },
+                onConfirm: saveInvoice,
+              })}
+            >
+              Submit Invoice
+            </Button>
           </Group>
         </Card>
       </Container>

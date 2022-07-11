@@ -1,5 +1,8 @@
-import { allocate, Dinero, dinero, toFormat } from 'dinero.js';
+import { add, allocate, Dinero, dinero, multiply, toFormat } from 'dinero.js';
 import { USD } from '@dinero.js/currencies';
+
+import { Transaction } from './db';
+import { GlobalConfig, PaymentMethod, Transaction as pTransaction } from '@prisma/client';
 
 // Re-export all the initial methods along with our helper methods
 export * from 'dinero.js';
@@ -21,4 +24,29 @@ export const percentage = (d: Dinero<number>, share: number, scale = 0) => {
   return chunk;
 };
 
+export const calculateSubTotal = (transactions: pTransaction[]): Dinero<number> => {
+  return transactions.reduce((money, transaction) => {
+    return add(money, multiply($(transaction.pricePer), transaction.itemQuantity));
+  }, $(0));
+};
 
+export const calculateSalesTax = (subTotal: Dinero<number>, config: GlobalConfig | undefined): Dinero<number> => {
+  return percentage(subTotal, config?.salesTaxRate ?? 0);
+};
+
+export const calculateProcessingFees = (subTotal: Dinero<number>, paymentMethod: PaymentMethod | undefined): Dinero<number> => {
+  return add($(paymentMethod?.flatFee ?? 0), percentage(subTotal, paymentMethod?.percentFee ?? 0));
+};
+
+export const calculateTotal = (
+  subTotal: Dinero<number>,
+  salesTax: Dinero<number>,
+  processingFees: Dinero<number>,
+  paymentMethod: PaymentMethod | undefined
+): Dinero<number> => {
+  const sum = add(subTotal, add(salesTax, processingFees));
+
+  return paymentMethod?.name === 'Cash'
+    ? toNearestQuarter(sum)
+    : sum;
+};

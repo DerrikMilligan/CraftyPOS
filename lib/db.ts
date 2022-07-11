@@ -1,4 +1,11 @@
-import { PrismaClient } from '@prisma/client'
+import {
+  Invoice as pInvoice,
+  Item as pItem,
+  PrismaClient,
+  Tag,
+  Transaction as pTransaction,
+  Vendor,
+} from '@prisma/client';
 
 declare global {
   // allow global `var` declarations
@@ -13,3 +20,8 @@ export const prisma =
   });
 
 if (process.env.NODE_ENV !== 'production') global.prisma = prisma;
+
+
+export type Item        = pItem        & { Tags: Tag[], Vendor: Vendor };
+export type Transaction = pTransaction & { Item: Item };
+export type Invoice     = pInvoice     & { Transactions: Transaction[] };

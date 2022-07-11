@@ -61,28 +61,26 @@ model Item {
   Tags         Tag[]
 }
 
-model Customer {
-  id        Int       @id @default(autoincrement())
-  firstName String
-  lastName  String
-  email     String
-  phone     String
-  Invoices  Invoice[]
-}
+//model Customer {
+//  id        Int       @id @default(autoincrement())
+//  firstName String
+//  lastName  String
+//  email     String
+//  phone     String
+//  Invoices  Invoice[]
+//}
 
 model Invoice {
   id              Int           @id @default(autoincrement())
-  customerId      Int
+//  customerId      Int
   paymentMethodId Int
   subTotal        Float
   salesTax        Float
   processingFees  Float
   total           Float
-  isBundle        Boolean       @default(false)
-  bundleSubTotal  Float
   checkNumber     String
   timestamp       DateTime      @default(now())
-  Customer        Customer      @relation(fields: [customerId], references: [id])
+//  Customer        Customer      @relation(fields: [customerId], references: [id])
   PaymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
   Transactions    Transaction[]
 }
