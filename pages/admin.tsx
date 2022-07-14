@@ -48,7 +48,6 @@ const Admin: NextPage = () => {
     </Container>
   );
   
-  
   const registerUser = async () => {
     if (password !== password2)
       return showNotification({
@@ -71,7 +70,20 @@ const Admin: NextPage = () => {
       }
     });
 
-    const body = await response.json();
+    const body: GenericResponse = await response.json();
+    
+    if (body.success)
+      showNotification({
+        title: 'Success!',
+        color: 'green',
+        message: `Created ${username} successfully!`,
+      });
+    else
+      showNotification({
+        title: 'Uh oh!',
+        color: 'red',
+        message: `Failed to create ${username} Error: ${body.message}!`,
+      });
   };
   
   return (

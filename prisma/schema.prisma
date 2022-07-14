@@ -29,7 +29,7 @@ model PaymentMethod {
 model User {
   id             Int    @id @default(autoincrement())
   username       String @unique
-  email          String @unique
+  email          String
   hashedPassword String
   role           Role   @default(USER)
   Logs           Log[]

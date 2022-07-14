@@ -8,7 +8,7 @@ import { credentialsAreValid, createUser } from 'lib/User';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<GenericResponse<null>>
+  res: NextApiResponse<GenericResponse>
 ) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
   
@@ -35,8 +35,8 @@ export default async function handler(
 
   // See if a user already exists
   const userLookup = await credentialsAreValid({ email, username, password });
-
-  if (userLookup.success === true || userLookup.message !== 'bad username')
+  
+  if (userLookup.success === true)
     return res.status(200).json({ success: false, message: 'username taken' });
   
   if (role !== Role.ADMIN && role !== Role.USER)

@@ -65,7 +65,7 @@ const createUser = async ({ username, password, email, role = Role.USER }: UserC
     where: {
       OR: [
         { username },
-        { email }
+        ...(email !== '' ? [{ email }] : []),
       ],
     },
   });

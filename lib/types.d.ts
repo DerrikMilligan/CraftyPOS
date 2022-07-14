@@ -1,5 +1,4 @@
-
-interface GenericResponse<T> {
+interface GenericResponse<T = null> {
   success : boolean
   message?: string
   data   ?: T
