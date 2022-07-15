@@ -1,8 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-import { Result, NotFoundException } from '@zxing/library';
+import { BarcodeFormat, DecodeHintType, NotFoundException } from '@zxing/library';
 import {
-  BrowserMultiFormatReader,
+  BrowserMultiFormatOneDReader,
   BrowserCodeReader,
   IScannerControls,
 } from '@zxing/browser';
@@ -28,7 +28,12 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
   const [ lastCameraUsed, setLastCameraUsed ] = useLocalStorage<string | null>({ key: 'last-camera', defaultValue: null });
 
   const previewEl = useRef<HTMLVideoElement>(null);
-  const codeReader = new BrowserMultiFormatReader();
+  // const codeReader = new BrowserMultiFormatReader();
+  
+  // prep the codeReader with using a 1D reader so there's less codes we're scanning for
+  const hints = new Map();
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, [ BarcodeFormat.CODE_128 ]);
+  const codeReader = new BrowserMultiFormatOneDReader(hints);
 
   useEffect(() => {
     if (scanning === true) {
@@ -47,7 +52,7 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
           // If we just haven't found anything then just hangout
           if (error instanceof NotFoundException)
             return;
-
+          
           // We found something so send it up!
           onScanned(result?.getText() || '__ScanError__');
 
@@ -56,7 +61,7 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
         }
       ).then(setControls);
 
-      console.log(`Started continous decode from camera with id ${selectedDevice.deviceId}`);
+      console.log(`Started continuous decode from camera with id ${selectedDevice.deviceId}`);
 
       return () => {
         if (controls === undefined)

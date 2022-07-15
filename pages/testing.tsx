@@ -38,9 +38,141 @@ const buildIntentLink = (os: OS, amount: Number) => {
 
   return (
     <a href="" onClick={() => window.location.assign(iosUrl) }>
+      
+      theme.colorScheme
+      
+      
+      
+      
+      
+     
+     
+     theme.colorScheme
+     
+     
+     
+     
+     
+     
+     
+     theme.colorScheme
+     
+     
+     
+     
+     
+     
+     
+     theme.colorScheme
+     
+     
+     
+     
+     
+      
+    
       Start Transaction :)
+      
+      
+      
+      theme.colorScheme
+      
+      
+      
+      
+      
+      
+      
+      theme.colorScheme
+      
+      
+      
+     
+     
+     
+     
+     theme.colorScheme
+     
+     
+     
+     
+     
+     
+     
+     theme.colorScheme
+     
+     
+     
+      
+   
     </a>
+    
+    
+    
+    
+    
+    theme.colorScheme
+  
+  
+  
+  
+  
+  
+  
+  theme.colorScheme
+  
+  
+  
+  
+  
+  
+  
+  theme.colorScheme
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ theme.colorScheme
+ 
+  
+ 
   );
+  
+  
+  
+  
+  
+  
+  
+  theme.colorScheme
+  
+  
+  
+  
+  
+  
+  
+  theme.colorScheme
+  
+  
+  
+  
+  
+  
+  
+  theme.colorScheme
+  
+  
+  
+  
+  
+  
+  
+  theme.colorScheme
+
 };
 
 const Home: NextPage = () => {

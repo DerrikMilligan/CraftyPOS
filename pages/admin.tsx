@@ -2,10 +2,13 @@ import type { NextPage } from 'next'
 import { useState } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 
+// @ts-ignore
+import Barcode from 'react-barcode';
+
 import {
   Button,
   Card,
-  Container,
+  Container, Grid,
   Group,
   Loader,
   Radio, RadioGroup,
@@ -14,12 +17,13 @@ import {
   Tabs,
   Text,
   TextInput,
-  Title,
+  Title, useMantineTheme,
 } from '@mantine/core';
-import { User as UserIcon } from 'tabler-icons-react';
+import { Barcode as BarcodeIcon, User as UserIcon } from 'tabler-icons-react';
 
 import { Role, User } from '@prisma/client';
 import { showNotification } from '@mantine/notifications';
+import UseItems from '../lib/hooks/useItems';
 
 const Admin: NextPage = () => {
   const [ role, setRole ] = useState(Role.USER);
@@ -27,10 +31,26 @@ const Admin: NextPage = () => {
   const [ password, setPassword ] = useState('');
   const [ password2, setPassword2 ] = useState('');
   
+  const theme = useMantineTheme();
+  
+  theme.colorScheme
+  
   const { data: sessionData, status: authStatus } = useSession();
   
+  const { items, isLoading, isError } = UseItems('all');
+  
+  if (isError) return (
+    <Container p={0}>
+      <Card p="lg">
+        <Stack align="center">
+          <Text align="center">{isError}</Text>
+        </Stack>
+      </Card>
+    </Container>
+  );
+  
   // Handle the loading and error states
-  if (authStatus === 'loading') return (
+  if (authStatus === 'loading' || isLoading) return (
     <Group position="center" mt={75}>
       <Loader color="green" size="lg" />
     </Group>
@@ -114,6 +134,37 @@ const Admin: NextPage = () => {
               <Button onClick={registerUser}>Add User</Button>
             </Group>
           </Tabs.Tab>
+
+          <Tabs.Tab label="Generate Barcodes" icon={<BarcodeIcon size={14} />}>
+            <Title order={3}>Barcodes</Title>
+            <Space h="md" />
+
+            {
+              items &&
+              (
+                <Grid>
+                  {
+                    items.map(item => (
+                      <Grid.Col span={4}>
+                        <Barcode
+                          key={item.id}
+                          value={`${item.id}:${item.name}`}
+                        />
+                      </Grid.Col>
+                      // <svg
+                      //   className="barcode"
+                      //   data-jsbarcode-format="upc"
+                      //   data-jsbarcode-value="123456789012"
+                      //   data-jsbarcode-textmargin="0"
+                      //   data-jsbarcode-fontoptions="bold"
+                      // />
+                    ))
+                  }
+                </Grid>
+              )
+            }
+          </Tabs.Tab>
+          
         </Tabs>
       </Card>
     </Container>
