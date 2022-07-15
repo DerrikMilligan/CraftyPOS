@@ -140,29 +140,22 @@ const Admin: NextPage = () => {
             <Title order={3}>Barcodes</Title>
             <Space h="md" />
 
-            {
-              items &&
-              (
-                <Grid>
-                  {
-                    items.map(item => (
-                      <Grid.Col span={4} key={item.id}>
-                        <Barcode
-                          value={`${item.id}:${item.name}`}
-                        />
-                      </Grid.Col>
-                      // <svg
-                      //   className="barcode"
-                      //   data-jsbarcode-format="upc"
-                      //   data-jsbarcode-value="123456789012"
-                      //   data-jsbarcode-textmargin="0"
-                      //   data-jsbarcode-fontoptions="bold"
-                      // />
-                    ))
-                  }
-                </Grid>
-              )
-            }
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' }}>
+              {
+                items &&
+                items.map(item => (
+                  <Barcode
+                    // Right now for generating we'll pad the start so that it's all the same size
+                    value={JSON.stringify({i: item.id.toString().padStart(3, '0')})}
+                    width={2}
+                    text={`${item.id}: ${item.name}` + (item.Tags?.length > 0 ? ` (${item.Tags[0].name})` : '' )}
+                    textMargin={10}
+                    fontSize={12}
+                    margin={20}
+                  />
+                ))
+              }
+            </div>
           </Tabs.Tab>
           
         </Tabs>
