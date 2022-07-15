@@ -145,6 +145,7 @@ const Admin: NextPage = () => {
                 items &&
                 items.map(item => (
                   <Barcode
+                    key={item.id}
                     // Right now for generating we'll pad the start so that it's all the same size
                     value={JSON.stringify({i: item.id.toString().padStart(3, '0')})}
                     width={2}

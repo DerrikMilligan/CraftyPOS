@@ -215,7 +215,62 @@ const Checkout: NextPage = () => {
       resetInvoice();
     }
   };
-  
+
+  /**
+   * Take some scanned data and try and parse out an item
+   * @param value
+   * @returns AutocompleteItemProps if we parse it correctly in the GenericResponse
+   */
+  const getAutocompleteItemFromScannedData = (value: string): GenericResponse<AutocompleteItemProps> => {
+    try {
+      const body = JSON.parse(value);
+
+      if (body.i === undefined) {
+        console.error("Scanned data didn't contain they key 'i'. Data: ", body);
+        return { success: false, message: "Scanned data didn't contain they key 'i'" };
+      }
+
+      const id = parseInt(body.i, 10);
+
+      if (Number.isNaN(id)) {
+        console.error("The id wasn't able to be parsed into a number. id: ", body.i);
+        return { success: false, message: "The id wasn't able to be parsed into a number" };
+      }
+
+      const item = autocompleteItems?.find(i => i.item.id === id) ?? undefined;
+      
+      if (item === undefined) {
+        console.error("Couldn't find an item with the id: ", id);
+        return { success: false, message: `Couldn't find an item with the id: ${id}` };
+      }
+
+      return { success: true, data: item };
+    } catch (e) {
+      console.error(`Failed to parse barcode data: ${value}`);
+      return { success: false, message: `Failed to parse barcode data: ${value}` };
+    }
+  };
+
+  /**
+   * Callback for when the barcode scans something
+   * @param value
+   */
+  const barcodeScanned = (value: string) => {
+    setScanning(false);
+    
+    const itemResponse = getAutocompleteItemFromScannedData(value);
+    
+    if (itemResponse.success === false) {
+      return showNotification({
+        title: 'Whoops!',
+        color: 'yellow',
+        message: 'Failed to parse barcode data! Try again',
+      });
+    }
+    
+    addItemToInvoice(itemResponse.data);
+  };
+
   return (
     <>
       <Modal
@@ -225,7 +280,10 @@ const Checkout: NextPage = () => {
         centered
         size="xl"
       >
-        <Scanner scanning={scanning} onScanned={(text) => { setScannedData(text); setScanning(false); }}></Scanner>
+        <Scanner
+          scanning={scanning}
+          onScanned={barcodeScanned}
+        />
       </Modal>
 
       <Container p={0}>
