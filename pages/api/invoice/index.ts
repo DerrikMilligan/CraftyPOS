@@ -14,12 +14,18 @@ import { getToken } from 'next-auth/jwt';
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse<Invoice & { Transactions: Transaction[] } | GenericResponse<null>>
+  res: NextApiResponse<Array<Invoice & { Transactions: Transaction[] }> | Invoice & { Transactions: Transaction[] } | GenericResponse<null>>
 ) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
   if (token === null)
     return res.status(500).json({ success: false, message: 'Not authorized to make this request!' });
+  
+  if (req.method === 'GET') {
+    const invoices = await prisma.invoice.findMany({ include: { Transactions: true }, orderBy: { timestamp: 'desc' } });
+
+    return res.status(200).json(invoices);
+  }
 
   // Make sure we're posting
   if (req.method === 'POST') {
@@ -110,11 +116,5 @@ export default async function handler(
     return res.status(200).json(invoice);
   }
   
-  // if (req.method === 'GET') {
-  //   const tags = await prisma.tag.findMany({ orderBy: { name: 'desc' } });
-  //
-  //   return res.status(200).json(tags);
-  // }
-
   return res.status(500).json({ success: false, message: 'Invalid request' });
 }

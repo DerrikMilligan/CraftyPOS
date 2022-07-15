@@ -50,7 +50,7 @@ export default async function handler(
     const resultsPerPage = req.query?.count && Number.parseInt(req.query.count) || defaultRowsPerPage;
     
     const items = await prisma.item.findMany({
-      orderBy: { name: 'desc' },
+      orderBy: { name: 'asc' },
       include: { Vendor: true, Tags: true },
       // If our query is for a specific page then limit it. Otherwise return everything!
       ...(req.query?.page !== 'all' && {

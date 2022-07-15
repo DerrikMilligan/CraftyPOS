@@ -48,7 +48,6 @@ import usePaymentMethods from '../lib/hooks/usePaymentMethods';
 import useConfig from '../lib/hooks/useConfig';
 
 import type { Transaction, Invoice } from '../lib/db';
-import Link from 'next/link';
 
 const Checkout: NextPage = () => {
   const modals = useModals();
@@ -61,7 +60,6 @@ const Checkout: NextPage = () => {
   // Register the various states we have
   const [ itemFilter, setItemFilter ] = useState('');
   const [ scanning, setScanning ] = useState(false);
-  const [ scannedData, setScannedData ] = useState('');
   const [ transactions, setTransactions ] = useState([] as Transaction[]);
   const [ paymentMethodName, setPaymentMethodName ] = useState('Card');
   const [ cashAmount, setCashAmount ] = useState(0);
@@ -312,9 +310,8 @@ const Checkout: NextPage = () => {
           
           <Space h="md" />
           
-          <Group position="apart">
+          <Group position="left">
             <Button onClick={() => setScanning(true)}>Scan Item</Button>
-            <div>Scanned Data: { scannedData }</div>
           </Group>
           
           <Space h="md" />
