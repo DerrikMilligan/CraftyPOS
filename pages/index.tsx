@@ -53,7 +53,10 @@ import Link from 'next/link';
 const Checkout: NextPage = () => {
   const modals = useModals();
   
-  const { status: authStatus } = useSession();
+  const { data: authData, status: authStatus } = useSession();
+  
+  // @ts-ignore This is an extra property that DOES exist
+  const isAdmin = authData?.user?.role === 'ADMIN';
   
   // Register the various states we have
   const [ itemFilter, setItemFilter ] = useState('');
@@ -84,8 +87,6 @@ const Checkout: NextPage = () => {
         item
       } as AutocompleteItemProps;
     }) || [], [ items, transactions ]);
-  
-  console.log(paymentMethods);
   
   const paymentMethod = useMemo(() => (Array.isArray(paymentMethods) ? paymentMethods : []).find(method => method.name === paymentMethodName), [ paymentMethods, paymentMethodName ]);
   
@@ -237,14 +238,21 @@ const Checkout: NextPage = () => {
         return { success: false, message: "The id wasn't able to be parsed into a number" };
       }
 
-      const item = autocompleteItems?.find(i => i.item.id === id) ?? undefined;
+      const item = items?.find(i => i.id === id) ?? undefined;
       
       if (item === undefined) {
         console.error("Couldn't find an item with the id: ", id);
         return { success: false, message: `Couldn't find an item with the id: ${id}` };
       }
+      
+      const autocompleteItem = autocompleteItems?.find(i => i.item.id === id) ?? undefined;
+      
+      if (autocompleteItem === undefined) {
+        console.error("Couldn't find an item with the id: ", id);
+        return { success: false, message: 'Item already added to the invoice' };
+      }
 
-      return { success: true, data: item };
+      return { success: true, data: autocompleteItem };
     } catch (e) {
       console.error(`Failed to parse barcode data: ${value}`);
       return { success: false, message: `Failed to parse barcode data: ${value}` };
@@ -261,11 +269,21 @@ const Checkout: NextPage = () => {
     const itemResponse = getAutocompleteItemFromScannedData(value);
     
     if (itemResponse.success === false) {
-      return showNotification({
-        title: 'Whoops!',
-        color: 'yellow',
-        message: 'Failed to parse barcode data! Try again',
-      });
+      if (itemResponse.message !== 'Item already added to the invoice')
+        return showNotification({
+          title: 'Whoops!',
+          color: 'yellow',
+          message:
+            'Failed to parse barcode data! Try again'
+            + (isAdmin ? `\n${itemResponse.message}` : '')
+          ,
+        });
+      else
+        return showNotification({
+          title: 'Hey now!',
+          color: 'green',
+          message: 'Item has already been added to the invoice! Try increasing the quantity if you need to sell more.',
+        });
     }
     
     addItemToInvoice(itemResponse.data);
