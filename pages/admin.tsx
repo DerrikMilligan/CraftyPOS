@@ -146,9 +146,8 @@ const Admin: NextPage = () => {
                 <Grid>
                   {
                     items.map(item => (
-                      <Grid.Col span={4}>
+                      <Grid.Col span={4} key={item.id}>
                         <Barcode
-                          key={item.id}
                           value={`${item.id}:${item.name}`}
                         />
                       </Grid.Col>
