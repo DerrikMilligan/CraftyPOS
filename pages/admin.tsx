@@ -8,10 +8,12 @@ import Barcode from 'react-barcode';
 import {
   Button,
   Card,
-  Container, Grid,
+  Container,
+  Grid,
   Group,
   Loader,
-  Radio, RadioGroup,
+  Radio,
+  RadioGroup,
   Space,
   Stack,
   Tabs,
@@ -31,9 +33,8 @@ const Admin: NextPage = () => {
   const [ password, setPassword ] = useState('');
   const [ password2, setPassword2 ] = useState('');
   
-  const theme = useMantineTheme();
-  
-  theme.colorScheme
+  // const theme = useMantineTheme();
+  // theme.colorScheme
   
   const { data: sessionData, status: authStatus } = useSession();
   
