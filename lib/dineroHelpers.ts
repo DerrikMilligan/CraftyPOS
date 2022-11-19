@@ -9,7 +9,10 @@ export * from 'dinero.js';
 
 export const $ = (amount: number) => dinero({ amount: Math.floor(amount * 100), currency: USD });
 
-export const formatMoney = (d: Dinero<number>): string => toFormat(d, ({ amount }) => amount.toFixed(2));
+export const numberHasDecimal = (num: number) => num % 1 != 0;
+
+export const formatMoney = (d: Dinero<number>): string =>
+  toFormat(d, ({ amount }) => numberHasDecimal(amount) ? amount.toFixed(2) : amount.toFixed(0));
 
 export const moneyToNumber = (d: Dinero<number>): number => parseFloat(formatMoney(d));
 

@@ -25,6 +25,7 @@ import { useVendors } from '../lib/hooks';
 import useItems from '../lib/hooks/useItems';
 import useTags from '../lib/hooks/useTags';
 import { signIn, useSession } from 'next-auth/react';
+import { $, formatMoney } from 'lib/dineroHelpers';
 
 const vendorToSelectItem = (v: Vendor): SelectItem => {
   return {
@@ -238,7 +239,7 @@ const Inventory: NextPage = () => {
                     </td>
                     <td>{item.name}</td>
                     <td>{item.stock}</td>
-                    <td>${item.price.toFixed(2)}</td>
+                    <td>${formatMoney($(item.price))}</td>
                     <td>{item?.Vendor?.firstName || ''}</td>
                     <td>
                       <Group spacing="xs">

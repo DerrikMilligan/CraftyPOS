@@ -37,6 +37,7 @@ import {
   calculateTotal,
   formatMoney,
   moneyToNumber,
+  numberHasDecimal,
   subtract
 } from '../lib/dineroHelpers';
 
@@ -399,7 +400,7 @@ const Checkout: NextPage = () => {
                         size="xs"
                         iconWidth={20}
                         icon={<CurrencyDollar size={12} color="lime" />}
-                        precision={2}
+                        precision={numberHasDecimal(transaction.pricePer) ? 2 : 0}
                         min={0}
                         styles={{ input: { padding: 2 } }}
                       />
@@ -486,7 +487,7 @@ const Checkout: NextPage = () => {
                   icon={<CurrencyDollar size={12} color="lime" />}
                   min={0}
                   precision={2}
-                  value={cashAmount}
+                  value={cashAmount || undefined}
                   onChange={val => setCashAmount(val || 0)}
                 ></NumberInput>
                 <Stack>
