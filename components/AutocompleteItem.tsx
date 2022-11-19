@@ -10,13 +10,19 @@ export interface AutocompleteItemProps extends Omit<SelectItemProps, 'label'> {
 export const AutocompleteItem = forwardRef<HTMLDivElement, AutocompleteItemProps>(({ value, item, ...others }: AutocompleteItemProps, ref) => {
   return (
     <Container ref={ref} {...others}>
-      <Grid align="center">
+      <Grid grow gutter="xs">
         <Grid.Col span={1}>
-          <Avatar radius="xl" size="sm" style={{ backgroundColor: item.Vendor.color }}>{item.Vendor.firstName[0]}{item.Vendor.lastName[0]}</Avatar>
+          <Avatar
+            radius="xl"
+            size="sm"
+            style={{ backgroundColor: item.Vendor.color }}
+          >
+            {item.Vendor.firstName[0]}{item.Vendor.lastName[0]}
+          </Avatar>
         </Grid.Col>
         <Grid.Col span={3}><Text>{item.name}</Text></Grid.Col>
         <Grid.Col span={2}><Text color="green">${item.price}</Text></Grid.Col>
-        <Grid.Col span={6}>
+        <Grid.Col span={3}>
           <Group spacing="xs">
             {
               item.Tags &&

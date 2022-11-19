@@ -341,13 +341,13 @@ const Checkout: NextPage = () => {
           <ScrollArea type="auto">
             <Table fontSize="xs" horizontalSpacing="xs" verticalSpacing="xs" striped={true} highlightOnHover>
               <thead>
-              <tr>
-                <th style={{ width: '10px' }}></th>
-                <th style={{ width: '50px' }}>Quant</th>
-                <th style={{ width: '100px', minWidth: '90px' }}>Price</th>
-                <th style={{ minWidth: '300px'}}>Item</th>
-                <th align="right" style={{ width: '100px', minWidth: '100px' }}>Total</th>
-              </tr>
+                <tr>
+                  <th style={{ width: '10px' }}></th>
+                  <th style={{ width: '30px' }}>Quant</th>
+                  <th style={{ width: '100px', minWidth: '90px' }}>Price</th>
+                  <th style={{ minWidth: '100px'}}>Item</th>
+                  <th align="right" style={{ width: '100px', minWidth: '100px' }}>Total</th>
+                </tr>
               </thead>
               <tbody>
               {
@@ -402,7 +402,7 @@ const Checkout: NextPage = () => {
                         icon={<CurrencyDollar size={12} color="lime" />}
                         precision={numberHasDecimal(transaction.pricePer) ? 2 : 0}
                         min={0}
-                        styles={{ input: { padding: 2 } }}
+                        // styles={{ input: { padding: 2 } }}
                       />
                     </td>
                     
@@ -421,50 +421,71 @@ const Checkout: NextPage = () => {
 
                     <td>
                       <CurrencyDollar size={12} color="lime" />
-                      {(Math.round(transaction.pricePer * transaction.itemQuantity * 100) / 100).toFixed(2)}
+                      {formatMoney($(transaction.pricePer * transaction.itemQuantity), true)}
                     </td>
                   </tr>
                 ))
+                ||
+                <tr>
+                  <td colSpan={5}>
+                    Search for an item to add above
+                  </td>
+                </tr>
               }
 
-              <tr style={{ lineHeight: 0.2 }}>
-                <td colSpan={5}>&nbsp;</td>
-              </tr>
-              <tr style={{ lineHeight: 0.5 }}>
-                <td colSpan={4} align="right">Sub Total:</td>
-                <td>
-                  <CurrencyDollar size={12} color="lime" />
-                  {formatMoney(subTotal)}
-                </td>
-              </tr>
-              <tr style={{ lineHeight: 0.5 }}>
-                <td colSpan={4} align="right">Tax:</td>
-                <td>
-                  <CurrencyDollar size={12} color="lime" />
-                  {formatMoney(salesTax)}
-                </td>
-              </tr>
-              <tr style={{ lineHeight: 0.5 }}>
-                <td colSpan={4} align="right">Fees:</td>
-                <td>
-                  <CurrencyDollar size={12} color="lime" />
-                  {formatMoney(processingFees)}
-                </td>
-              </tr>
-              <tr style={{ lineHeight: 0.5 }}>
-                <td colSpan={4} align="right">Total:</td>
-                <td>
-                  <CurrencyDollar size={12} color="lime" />
-                  {formatMoney(total)}
-                </td>
-              </tr>
-              <tr style={{ lineHeight: 0.2 }}>
-                <td colSpan={5}>&nbsp;</td>
-              </tr>
+                <tr style={{ lineHeight: 0.2 }}>
+                  <td colSpan={2}>&nbsp;</td>
+                </tr>
               </tbody>
             </Table>
           </ScrollArea>
-          
+
+          <Group>
+            <Title order={3}>Totals</Title>
+          </Group>
+
+          <Table fontSize="xs" horizontalSpacing="xs" verticalSpacing="xs" striped={true} highlightOnHover>
+            <thead>
+              <tr>
+                <th style={{ minWidth: '150px'}}></th>
+                <th align="right" style={{ width: '100px', minWidth: '100px' }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style={{ lineHeight: 0.2 }}>
+                <td colSpan={2}>&nbsp;</td>
+              </tr>
+              <tr style={{ lineHeight: 0.5 }}>
+                <td align="right">Sub Total:</td>
+                <td>
+                  <CurrencyDollar size={12} color="lime" />
+                  {formatMoney(subTotal, true)}
+                </td>
+              </tr>
+              <tr style={{ lineHeight: 0.5 }}>
+                <td align="right">Tax:</td>
+                <td>
+                  <CurrencyDollar size={12} color="lime" />
+                  {formatMoney(salesTax, true)}
+                </td>
+              </tr>
+              <tr style={{ lineHeight: 0.5 }}>
+                <td align="right">Fees:</td>
+                <td>
+                  <CurrencyDollar size={12} color="lime" />
+                  {formatMoney(processingFees, true)}
+                </td>
+              </tr>
+              <tr style={{ lineHeight: 0.5 }}>
+                <td align="right">Total:</td>
+                <td>
+                  <CurrencyDollar size={12} color="lime" />
+                  {formatMoney(total, true)}
+                </td>
+              </tr>
+            </tbody>
+          </Table>
+        
           <Space h="md" />
           
           <Group position="right" align="center">
