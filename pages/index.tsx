@@ -457,6 +457,9 @@ const Checkout: NextPage = () => {
                   {formatMoney(total)}
                 </td>
               </tr>
+              <tr style={{ lineHeight: 0.2 }}>
+                <td colSpan={5}>&nbsp;</td>
+              </tr>
               </tbody>
             </Table>
           </ScrollArea>
