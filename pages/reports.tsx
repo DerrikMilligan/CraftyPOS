@@ -3,7 +3,7 @@ import { signIn, useSession } from 'next-auth/react';
 
 import { Role, Transaction } from '@prisma/client';
 
-import { Badge, Button, Card, Container, Group, Loader, Space, Stack, Table, Tabs, Text, Title } from '@mantine/core';
+import { Badge, Button, Card, Container, Group, Loader, ScrollArea, Space, Stack, Table, Tabs, Text, Title } from '@mantine/core';
 import { CurrencyDollar, User as UserIcon } from 'tabler-icons-react';
 
 import UseItems from '../lib/hooks/useItems';
@@ -74,50 +74,52 @@ const Reports: NextPage = () => {
             
             <Space h="md" />
             
-            <Table>
-              <thead>
-                <tr>
-                  <th>id</th>
-                  <th>Name</th>
-                  <th>Tags</th>
-                  <th>Inventory</th>
-                  <th>Sold</th>
-                  <th>Remaining</th>
-                </tr>
-              </thead>
-              <tbody>
-                {
-                  items && invoices &&
-                  items.map(item => (
-                    <tr key={item.id}>
-                      <td>{item.id}</td>
-                      <td style={
-                        (item.stock - (itemSoldMap[item.id] ?? 0) <= 0)
-                          ? { textDecoration: 'line-through', color: '#fa5252' }
-                          : {}
-                      }>
-                        {item.name}
-                      </td>
-                      <td>
-                        <Group spacing="xs">
-                          {
-                            item.Tags &&
-                            item.Tags.map(tag => (
-                              <Badge color="green" key={tag.id} size="xs">
-                                {tag.name}
-                              </Badge>
-                            ))
-                          }
-                        </Group>
-                      </td>
-                      <td>{item.stock}</td>
-                      <td>{itemSoldMap[item.id] ?? ''}</td>
-                      <td>{item.stock - (itemSoldMap[item.id] ?? 0)}</td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </Table>
+            <ScrollArea type="auto">
+              <Table>
+                <thead>
+                  <tr>
+                    <th>id</th>
+                    <th>Name</th>
+                    <th>Tags</th>
+                    <th>Inventory</th>
+                    <th>Sold</th>
+                    <th>Remaining</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {
+                    items && invoices &&
+                    items.map(item => (
+                      <tr key={item.id}>
+                        <td>{item.id}</td>
+                        <td style={
+                          (item.stock - (itemSoldMap[item.id] ?? 0) <= 0)
+                            ? { textDecoration: 'line-through', color: '#fa5252' }
+                            : {}
+                        }>
+                          {item.name}
+                        </td>
+                        <td>
+                          <Group spacing="xs">
+                            {
+                              item.Tags &&
+                              item.Tags.map(tag => (
+                                <Badge color="green" key={tag.id} size="xs">
+                                  {tag.name}
+                                </Badge>
+                              ))
+                            }
+                          </Group>
+                        </td>
+                        <td>{item.stock}</td>
+                        <td>{itemSoldMap[item.id] ?? ''}</td>
+                        <td>{item.stock - (itemSoldMap[item.id] ?? 0)}</td>
+                      </tr>
+                    ))
+                  }
+                </tbody>
+              </Table>
+            </ScrollArea>
             
           </Tabs.Tab>
 
