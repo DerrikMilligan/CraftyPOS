@@ -11,18 +11,18 @@ export default async function handler(
   res: NextApiResponse<GenericResponse>
 ) {
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-  
+
   if (token === null)
     return res.status(200).json({ success: false, message: 'Not authorized to make this request!' });
-  
+
   // @ts-ignore
   const actingUser = await prisma.user.findFirst({ where: { id: parseInt(token.id) } });
   if (actingUser === null)
     return res.status(200).json({ success: false, message: 'You\'re not a real person!' });
-  
+
   if (actingUser.role !== Role.ADMIN)
     return res.status(200).json({ success: false, message: 'Not authorized to make this request!' });
-  
+
   // Make sure we're posting
   if (req.method !== 'POST')
     return res.status(200).json({ success: false, message: 'Must be post request' });
@@ -35,10 +35,10 @@ export default async function handler(
 
   // See if a user already exists
   const userLookup = await credentialsAreValid({ email, username, password });
-  
+
   if (userLookup.success === true)
     return res.status(200).json({ success: false, message: 'username taken' });
-  
+
   if (role !== Role.ADMIN && role !== Role.USER)
     return res.status(200).json({ success: false, message: 'bad role' });
 
@@ -50,3 +50,4 @@ export default async function handler(
 
   return res.status(200).json({ success: true });
 }
+

@@ -6,10 +6,7 @@ import {
   ActionIcon,
   Button,
   Burger,
-  ColorScheme,
   Group,
-  Header as MantineHeader,
-  MediaQuery,
   Text,
   useMantineTheme,
 } from '@mantine/core';
@@ -17,29 +14,27 @@ import {
 interface HeaderProps {
   opened     : boolean;
   setOpened  : Dispatch<SetStateAction<boolean>>;
-  colorScheme: ColorScheme;
 
   toggleColorScheme(value?: ColorScheme | undefined): void;
 }
 
-export default function Header({ opened, setOpened, colorScheme, toggleColorScheme }: HeaderProps) {
+export default function Header({ opened, setOpened, toggleColorScheme }: HeaderProps) {
   const theme = useMantineTheme();
 
   const { data: session } = useSession();
 
   return (
-    <MantineHeader height={70} p="md" style={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-      <MediaQuery largerThan="sm" styles={{ display: 'none' }}>
-        <Burger
-          opened={opened}
-          onClick={() => setOpened((o) => !o)}
-          size="md"
-          color={theme.colors.gray[6]}
-          mr="xl"
-        />
-      </MediaQuery>
+    <>
+      <Burger
+        visibleFrom="sm"
+        opened={opened}
+        onClick={() => setOpened((o) => !o)}
+        size="md"
+        color={theme.colors.gray[6]}
+        mr="xl"
+      />
 
-      <Group position="apart" style={{ width: '100%' }}>
+      <Group justify="space-around" style={{ width: '100%' }}>
         <Text size='xl'>Crafty POS</Text>
         <Group>
           {
@@ -56,6 +51,6 @@ export default function Header({ opened, setOpened, colorScheme, toggleColorSche
           </ActionIcon>
          </Group>
       </Group>
-    </MantineHeader>
+    </>
   );
 }

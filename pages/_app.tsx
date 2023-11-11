@@ -1,5 +1,5 @@
 import { AppProps } from 'next/app';
-import { SessionProvider, signIn, signOut, useSession } from 'next-auth/react';
+import { SessionProvider } from 'next-auth/react';
 
 import Layout from 'components/Layout/MainLayout';
 

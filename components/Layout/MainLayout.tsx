@@ -3,14 +3,16 @@ import Head from 'next/head';
 
 import {
   AppShell,
-  ColorScheme,
   MantineProvider,
-  Navbar,
   useMantineTheme,
+  createTheme,
 } from '@mantine/core';
 
-import { NotificationsProvider } from '@mantine/notifications';
+import { Notifications } from '@mantine/notifications';
 import { ModalsProvider } from '@mantine/modals';
+
+import '@mantine/core/styles.css';
+import '@mantine/notifications/styles.css';
 
 import NavbarLinks from 'components/NavbarLinks';
 import Header from './Header';
@@ -19,15 +21,19 @@ interface LayoutProps {
   children: React.ReactNode,
 }
 
+const mantineTheme = createTheme({});
+
 export default function Layout({ children }: LayoutProps) {
   const theme = useMantineTheme();
 
   const [ opened, setOpened ] = useState(false);
-  const [ colorScheme, setColorScheme ] = useState<ColorScheme>('dark');
+  const [ opened, { toggle }] = useDisclosure();
 
-  const toggleColorScheme = (value?: ColorScheme) => {
-    setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
-  }
+  // const [ colorScheme, setColorScheme ] = useState<ColorScheme>('dark');
+  //
+  // const toggleColorScheme = (value?: ColorScheme) => {
+  //   setColorScheme(value || (colorScheme === 'dark' ? 'light' : 'dark'));
+  // }
 
   return (
     <>
@@ -36,12 +42,8 @@ export default function Layout({ children }: LayoutProps) {
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
       </Head>
 
-      <MantineProvider
-        withGlobalStyles
-        withNormalizeCSS
-        theme={{ colorScheme: colorScheme }}
-      >
-        <NotificationsProvider position="top-right">
+      <MantineProvider theme={mantineTheme} defaultColorScheme="dark">
+        <Notifications position="top-right">
           <ModalsProvider>
             <AppShell
               styles={{
@@ -52,24 +54,29 @@ export default function Layout({ children }: LayoutProps) {
               navbarOffsetBreakpoint="sm"
               asideOffsetBreakpoint="sm"
               fixed
-              header={
-                <Header
-                  opened={opened}
-                  setOpened={setOpened}
-                  colorScheme={colorScheme}
-                  toggleColorScheme={toggleColorScheme}
-                ></Header>
-              }
               navbar={
                 <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
                   <NavbarLinks closeNav={() => setOpened(false)}></NavbarLinks>
                 </Navbar>
               }
             >
+
+              <AppShell.Header>
+                <Header
+                  opened={opened}
+                  setOpened={setOpened}
+                  colorScheme={colorScheme}
+                  toggleColorScheme={toggleColorScheme}
+                ></Header>
+              </AppShell.Header>
+
+              <AppShell.Navbar>
+              </AppShell.Navbar>
+
               { children }
             </AppShell>
           </ModalsProvider>
-        </NotificationsProvider>
+        </Notifications>
       </MantineProvider>
     </>
   );

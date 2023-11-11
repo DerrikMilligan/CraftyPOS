@@ -1,8 +1,8 @@
-import React, { Dispatch, SetStateAction } from 'react';
+import React from 'react';
 import Link from 'next/link';
 
-import { Box, Cash, List, ReportMoney, TestPipe, User } from 'tabler-icons-react';
-import { UnstyledButton, Group, ThemeIcon, Text, MediaQuery, useMantineTheme } from '@mantine/core';
+import { Box, Cash, List, ReportMoney, User } from 'tabler-icons-react';
+import { NavLink, ThemeIcon } from '@mantine/core';
 
 interface NavbarLinkProps {
   icon : React.ReactNode;
@@ -13,33 +13,18 @@ interface NavbarLinkProps {
 }
 
 function NavbarLink({ icon, color, label, path, closeNav }: NavbarLinkProps) {
-  const theme = useMantineTheme();
-
   return (
     <Link href={path} passHref>
-      <UnstyledButton
+      <NavLink
         onClick={() => closeNav()}
-        sx={(theme) => ({
-          display: 'block',
-          width: '100%',
-          padding: theme.spacing.xs,
-          borderRadius: theme.radius.sm,
-          color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
-
-          '&:hover': {
-            backgroundColor:
-              theme.colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[0],
-          },
-        })}
-      >
-        <Group>
+        label={label}
+        leftSection={
           <ThemeIcon size="lg" color={color} variant="light">
             {icon}
           </ThemeIcon>
-
-          <Text>{label}</Text>
-        </Group>
-      </UnstyledButton>
+        }
+      >
+      </NavLink>
     </Link>
   );
 }
