@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-import { Tag } from '.prisma/client';
+import { Tag } from '@prisma/client';
 
 import { prisma } from '../../../lib/db';
 import { getToken } from 'next-auth/jwt';

@@ -6,23 +6,23 @@ settings:
 
 dependencies:
   '@mantine/core':
-    specifier: ^4.2.2
-    version: 4.2.2(@mantine/hooks@4.2.2)(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
+    specifier: ^4.2.12
+    version: 4.2.12(@mantine/hooks@4.2.12)(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
   '@mantine/form':
-    specifier: ^4.2.2
-    version: 4.2.2(react@17.0.2)
+    specifier: ^4.2.12
+    version: 4.2.12(react@17.0.2)
   '@mantine/hooks':
-    specifier: ^4.2.2
-    version: 4.2.2(react@17.0.2)
+    specifier: ^4.2.12
+    version: 4.2.12(react@17.0.2)
   '@mantine/modals':
-    specifier: ^4.2.2
-    version: 4.2.2(@mantine/core@4.2.2)(@mantine/hooks@4.2.2)(react-dom@17.0.2)(react@17.0.2)
+    specifier: ^4.2.12
+    version: 4.2.12(@mantine/core@4.2.12)(@mantine/hooks@4.2.12)(react-dom@17.0.2)(react@17.0.2)
   '@mantine/next':
-    specifier: ^4.2.2
-    version: 4.2.2(@types/react@18.0.8)(next@12.1.5)(react-dom@17.0.2)(react@17.0.2)
+    specifier: ^4.2.12
+    version: 4.2.12(@types/react@18.0.8)(next@12.1.5)(react-dom@17.0.2)(react@17.0.2)
   '@mantine/notifications':
-    specifier: ^4.2.2
-    version: 4.2.2(@mantine/core@4.2.2)(@mantine/hooks@4.2.2)(react-dom@17.0.2)(react@17.0.2)
+    specifier: ^4.2.12
+    version: 4.2.12(@mantine/core@4.2.12)(@mantine/hooks@4.2.12)(react-dom@17.0.2)(react@17.0.2)
   '@prisma/client':
     specifier: ^5.5.2
     version: 5.5.2(prisma@5.5.2)
@@ -36,8 +36,8 @@ dependencies:
     specifier: ^5.0.1
     version: 5.0.1
   dinero.js:
-    specifier: ^2.0.0-alpha.8
-    version: 2.0.0-alpha.8
+    specifier: 2.0.0-alpha.14
+    version: 2.0.0-alpha.14
   fuzzysort:
     specifier: ^2.0.1
     version: 2.0.1
@@ -70,12 +70,18 @@ dependencies:
     version: 1.47.0(react@17.0.2)
 
 devDependencies:
+  '@dinero.js/currencies':
+    specifier: 2.0.0-alpha.1
+    version: 2.0.0-alpha.1
   '@mermaid-js/mermaid-cli':
     specifier: ^9.1.2
     version: 9.1.2
   '@types/bcrypt':
     specifier: ^5.0.0
     version: 5.0.0
+  '@types/dinero.js':
+    specifier: 1.9.3
+    version: 1.9.3
   '@types/js-levenshtein':
     specifier: ^1.1.1
     version: 1.1.1
@@ -93,7 +99,7 @@ devDependencies:
     version: 8.14.0
   eslint-config-next:
     specifier: 12.1.5
-    version: 12.1.5(eslint@8.14.0)(next@12.1.5)(typescript@5.2.2)
+    version: 12.1.5(eslint@8.14.0)(next@12.1.5)(typescript@4.9.4)
   prettier:
     specifier: ^2.6.2
     version: 2.6.2
@@ -102,13 +108,13 @@ devDependencies:
     version: 5.5.2
   ts-node:
     specifier: ^10.7.0
-    version: 10.7.0(@types/node@17.0.31)(typescript@5.2.2)
+    version: 10.7.0(@types/node@17.0.31)(typescript@4.9.4)
   ts-node-dev:
     specifier: ^1.1.8
-    version: 1.1.8(typescript@5.2.2)
+    version: 1.1.8(typescript@4.9.4)
   typescript:
-    specifier: 5.2.2
-    version: 5.2.2
+    specifier: 4.9.4
+    version: 4.9.4
 
 packages:
 
@@ -147,20 +153,24 @@ packages:
       '@cspotcode/source-map-consumer': 0.8.0
     dev: true
 
-  /@dinero.js/calculator-number@2.0.0-alpha.8:
-    resolution: {integrity: sha512-/L+N7g5DjcS6wlMb2hcOXWBKW2TGiG+vZDZr9ow0nsHUTdwtMarL1bmBH9fGldHhH2XsxcrjN9H+036yeNzh3Q==}
+  /@dinero.js/calculator-number@2.0.0-alpha.14:
+    resolution: {integrity: sha512-Vmlu6eXNtkFU2cqlrpqfq8KQP9onALf8Es2d34liVa3k3RHjuhizgFUU3V3/tsjOu5WekZq+gYPOr58XVTkB7A==}
     dependencies:
-      '@dinero.js/core': 2.0.0-alpha.8
+      '@dinero.js/core': 2.0.0-alpha.14
     dev: false
 
-  /@dinero.js/core@2.0.0-alpha.8:
-    resolution: {integrity: sha512-3jaw2j6J/SshlCZz5KhHkh8zP47HRmt9RpnjR0BJs2awpweVuZIyyX9qzGVUEVpml9IwzQ1U+YdXevhOxtcDgg==}
+  /@dinero.js/core@2.0.0-alpha.14:
+    resolution: {integrity: sha512-CtKELJ783joUbaU62fRM2xDXb4XYSy0MgOuIkPWgVOS3SYKKb6+2Ec9bNlvrW8lsPROz/RsvCuYVTphrZ79twg==}
     dependencies:
-      '@dinero.js/currencies': 2.0.0-alpha.8
+      '@dinero.js/currencies': 2.0.0-alpha.14
     dev: false
 
-  /@dinero.js/currencies@2.0.0-alpha.8:
-    resolution: {integrity: sha512-zApiqtuuPwjiM9LJA5/kNcT48VSHRiz2/mktkXjIpfxrJKzthXybUAgEenExIH6dYhLDgVmsLQZtZFOsdYl0Ag==}
+  /@dinero.js/currencies@2.0.0-alpha.1:
+    resolution: {integrity: sha512-JoKY6q3AOm2II44qLp6VMGn+j+p6QC39m3DFogKZXsucWIIvzt7c2v04DZrrHWLNnDYNzITOnbQ7f2pGbONjig==}
+    dev: true
+
+  /@dinero.js/currencies@2.0.0-alpha.14:
+    resolution: {integrity: sha512-Ck5ZLjRI7Pl7Y4VkeOst4WEwiN5vZezv8GHcXWsVLUfTNsmkV37VeLYDRAuTUP4akEJyIry+1o1qHYNtLq3eNw==}
     dev: false
 
   /@emotion/cache@11.7.1:
@@ -211,7 +221,7 @@ packages:
       '@emotion/memoize': 0.7.5
       '@emotion/unitless': 0.7.5
       '@emotion/utils': 1.0.0
-      csstype: 3.0.9
+      csstype: 3.1.2
     dev: false
 
   /@emotion/server@11.4.0:
@@ -276,15 +286,15 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
-  /@mantine/core@4.2.2(@mantine/hooks@4.2.2)(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-K8m9oNUs1dqE9qoqXcjrum0rCpG+M9245Q7Qh1FezOPyrdUcfSFVvfrBguuGnWtQXOm0EpWwG7Wqj4uojgjQng==}
+  /@mantine/core@4.2.12(@mantine/hooks@4.2.12)(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-PZcVUvcSZiZmLR1moKBJFdFIh6a4C+TE2ao91kzTAlH5Qb8t/V3ONbfPk3swHoYr7OSLJQM8vZ7UD5sFDiq0/g==}
     peerDependencies:
-      '@mantine/hooks': 4.2.2
+      '@mantine/hooks': 4.2.12
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
     dependencies:
-      '@mantine/hooks': 4.2.2(react@17.0.2)
-      '@mantine/styles': 4.2.2(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@mantine/hooks': 4.2.12(react@17.0.2)
+      '@mantine/styles': 4.2.12(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
       '@popperjs/core': 2.11.8
       '@radix-ui/react-scroll-area': 0.1.4(react@17.0.2)
       react: 17.0.2
@@ -296,44 +306,44 @@ packages:
       - '@types/react'
     dev: false
 
-  /@mantine/form@4.2.2(react@17.0.2):
-    resolution: {integrity: sha512-wrC1m3TV4icaaUwfd4sUV8xyjx6MHsVNSdaP7hqALCVC3iNWLOHLxkDCZZbOn0lg1X7UX62JUqcJm6E+41PNog==}
+  /@mantine/form@4.2.12(react@17.0.2):
+    resolution: {integrity: sha512-CnpkzZr7VVekN3gg/4fMG9DYEqDsOg1jJGGxFKZ7GjR4liwEOsL3FvC+Szi3OlI0ytfLFOg8zU8RCoEO758sQA==}
     peerDependencies:
       react: '>=16.8.0'
     dependencies:
       react: 17.0.2
     dev: false
 
-  /@mantine/hooks@4.2.2(react@17.0.2):
-    resolution: {integrity: sha512-H580XCbgH0UnmaiHOvWGGFcFpNnXwl3zFTFLAH8fhp80AeLhIoYdI9+kvbg4G69UZlZrhr1h9naWCN9O8gjizg==}
+  /@mantine/hooks@4.2.12(react@17.0.2):
+    resolution: {integrity: sha512-/2GOsgv1tAUFBXOUV0YBZdDZHj3pHN82Sv1oI/hJMjfIT3ZkGeeiJO8Cw9cBcn76t6caP6Czi3hcuKhjz71O+A==}
     peerDependencies:
       react: '>=16.8.0'
     dependencies:
       react: 17.0.2
     dev: false
 
-  /@mantine/modals@4.2.2(@mantine/core@4.2.2)(@mantine/hooks@4.2.2)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-C8qn87uUSYngmun8VOUWQQttNNCQeNKAaxyOl98pUzUmF2Z9LWQumK5D6I/IJzIf3hWYBOD/L57ZxmdQfTKd9w==}
+  /@mantine/modals@4.2.12(@mantine/core@4.2.12)(@mantine/hooks@4.2.12)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-UEcz2kZIt5fQELTuV0YKtqNzNVs+lyP8aqoNJAUgl3u4EKg4YS0WTTqCOJ6ACtAdmCc10lemgQ3zV/HnNh15Ng==}
     peerDependencies:
-      '@mantine/core': 4.2.2
-      '@mantine/hooks': 4.2.2
+      '@mantine/core': 4.2.12
+      '@mantine/hooks': 4.2.12
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
     dependencies:
-      '@mantine/core': 4.2.2(@mantine/hooks@4.2.2)(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@mantine/hooks': 4.2.2(react@17.0.2)
+      '@mantine/core': 4.2.12(@mantine/hooks@4.2.12)(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@mantine/hooks': 4.2.12(react@17.0.2)
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
     dev: false
 
-  /@mantine/next@4.2.2(@types/react@18.0.8)(next@12.1.5)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-KuRZHzQ6Asp5y78JqBZlwxXjmxbC27tFCwqDTDD4X6ypsdEqILgxSyBC1um+kFzi5hfauftLQ5Q8FGdiEtPfsA==}
+  /@mantine/next@4.2.12(@types/react@18.0.8)(next@12.1.5)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-Wpjjp5lLy14gFV84EV3Yu4j1uLFugf8mSwQOJa+gD5IT9ENpOHEGykmo7SHS3EormFLPE9seDD28dACC2sNM5Q==}
     peerDependencies:
       next: '*'
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
     dependencies:
-      '@mantine/ssr': 4.2.2(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@mantine/ssr': 4.2.12(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
       next: 12.1.5(react-dom@17.0.2)(react@17.0.2)
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
@@ -343,23 +353,23 @@ packages:
       - '@types/react'
     dev: false
 
-  /@mantine/notifications@4.2.2(@mantine/core@4.2.2)(@mantine/hooks@4.2.2)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-QC0j74jcQs0zsljgjEb8UicsIFfxKayZRVlEefrBzJUbm89bs+TOzHugL2GL+IMJ1WSQKTI9YWvGXVbf8ZCzww==}
+  /@mantine/notifications@4.2.12(@mantine/core@4.2.12)(@mantine/hooks@4.2.12)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-Ip+8KxH9P1i8uZnhv2zTU+OFJjYBs3122KnVYy6vLsR83agRuY1KzbxjlOVVmP2Dq5aJX2pvefWWjA++NzhNtA==}
     peerDependencies:
-      '@mantine/core': 4.2.2
-      '@mantine/hooks': 4.2.2
+      '@mantine/core': 4.2.12
+      '@mantine/hooks': 4.2.12
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
     dependencies:
-      '@mantine/core': 4.2.2(@mantine/hooks@4.2.2)(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
-      '@mantine/hooks': 4.2.2(react@17.0.2)
+      '@mantine/core': 4.2.12(@mantine/hooks@4.2.12)(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@mantine/hooks': 4.2.12(react@17.0.2)
       react: 17.0.2
       react-dom: 17.0.2(react@17.0.2)
       react-transition-group: 4.4.5(react-dom@17.0.2)(react@17.0.2)
     dev: false
 
-  /@mantine/ssr@4.2.2(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-xZV+kAgiDIGoxTRXJFoY8LqjxTzmvX1YxRO5QCK0Ky7JuA/iiCwSDsHf5fRqGj6e/ZNJh0MHr/M52PdpYBrpuQ==}
+  /@mantine/ssr@4.2.12(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-PhM+nYzKs7ooPgMyJGPrdE0KaBB1T72yln3K/3ydkJBAMb/gl08Gm8gpzInzfn2kB7bdRVNwuF0i8Ba0pDbvJg==}
     peerDependencies:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
@@ -369,7 +379,7 @@ packages:
       '@emotion/serialize': 1.0.2
       '@emotion/server': 11.4.0
       '@emotion/utils': 1.0.0
-      '@mantine/styles': 4.2.2(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
+      '@mantine/styles': 4.2.12(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2)
       csstype: 3.0.9
       html-react-parser: 1.3.0(react@17.0.2)
       react: 17.0.2
@@ -380,8 +390,8 @@ packages:
       - '@types/react'
     dev: false
 
-  /@mantine/styles@4.2.2(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2):
-    resolution: {integrity: sha512-0aPm0Zc3zFOGOT1ZGAShBg+/rE+hMU81ZJk4guEWv1j8snoqg55y9G9mIpfsgffkQc0NhkGAX++CAA/0BBSxFQ==}
+  /@mantine/styles@4.2.12(@types/react@18.0.8)(react-dom@17.0.2)(react@17.0.2):
+    resolution: {integrity: sha512-9q1DzW0UNW/ORMGLHfN2XABOSEm0ZQebhNlLD757R6OQouoLuUf9elUwgGOXSyogMlsAYoy84XbJ3ZbbTm4YCA==}
     peerDependencies:
       react: '>=16.8.0'
       react-dom: '>=16.8.0'
@@ -720,6 +730,10 @@ packages:
       '@types/node': 17.0.31
     dev: true
 
+  /@types/dinero.js@1.9.3:
+    resolution: {integrity: sha512-biwyjsnx2CQZ3f333tP6MnTfODG1MYHRY92HOBcQK17aauLvzb1z6x+fwmfMMgS8twjjafxq2mylFVLB/Bg+Hw==}
+    dev: true
+
   /@types/js-levenshtein@1.1.1:
     resolution: {integrity: sha512-qC4bCqYGy1y/NP7dDVr7KJarn+PbX1nSpwA7JXdu0HxT3QYjO8MJ+cntENtHFVy2dRAyBV23OZ6MxsW1AM1L8g==}
     dev: true
@@ -767,7 +781,7 @@ packages:
     dev: true
     optional: true
 
-  /@typescript-eslint/parser@5.10.1(eslint@8.14.0)(typescript@5.2.2):
+  /@typescript-eslint/parser@5.10.1(eslint@8.14.0)(typescript@4.9.4):
     resolution: {integrity: sha512-GReo3tjNBwR5RnRO0K2wDIDN31cM3MmDtgyQ85oAxAmC5K3j/g85IjP+cDfcqDsDDBf1HNKQAD0WqOYL8jXqUA==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
@@ -779,10 +793,10 @@ packages:
     dependencies:
       '@typescript-eslint/scope-manager': 5.10.1
       '@typescript-eslint/types': 5.10.1
-      '@typescript-eslint/typescript-estree': 5.10.1(typescript@5.2.2)
+      '@typescript-eslint/typescript-estree': 5.10.1(typescript@4.9.4)
       debug: 4.3.4
       eslint: 8.14.0
-      typescript: 5.2.2
+      typescript: 4.9.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -800,7 +814,7 @@ packages:
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     dev: true
 
-  /@typescript-eslint/typescript-estree@5.10.1(typescript@5.2.2):
+  /@typescript-eslint/typescript-estree@5.10.1(typescript@4.9.4):
     resolution: {integrity: sha512-PwIGnH7jIueXv4opcwEbVGDATjGPO1dx9RkUl5LlHDSe+FXxPwFL5W/qYd5/NHr7f6lo/vvTrAzd0KlQtRusJQ==}
     engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
     peerDependencies:
@@ -815,8 +829,8 @@ packages:
       globby: 11.1.0
       is-glob: 4.0.3
       semver: 7.5.4
-      tsutils: 3.21.0(typescript@5.2.2)
-      typescript: 5.2.2
+      tsutils: 3.21.0(typescript@4.9.4)
+      typescript: 4.9.4
     transitivePeerDependencies:
       - supports-color
     dev: true
@@ -1587,12 +1601,12 @@ packages:
     engines: {node: '>=0.3.1'}
     dev: true
 
-  /dinero.js@2.0.0-alpha.8:
-    resolution: {integrity: sha512-6bl+g6oh6iQ6vPR5Pd4qr7D+P5e51GYRUT3jl8HYqYeejYC5sd9OVTTbXC3WU7L25mAIbOm+diiTVz1rL4QLwg==}
+  /dinero.js@2.0.0-alpha.14:
+    resolution: {integrity: sha512-dkURHd9P+2TjuSTMUAnvrB7SsL4GbBYG/WPtIBV8M+L7Xf80x84sJcUUTxIS33S4AlkIbVANlaL86w2g5zdrmg==}
     dependencies:
-      '@dinero.js/calculator-number': 2.0.0-alpha.8
-      '@dinero.js/core': 2.0.0-alpha.8
-      '@dinero.js/currencies': 2.0.0-alpha.8
+      '@dinero.js/calculator-number': 2.0.0-alpha.14
+      '@dinero.js/core': 2.0.0-alpha.14
+      '@dinero.js/currencies': 2.0.0-alpha.14
     dev: false
 
   /dir-glob@3.0.1:
@@ -1762,7 +1776,7 @@ packages:
     engines: {node: '>=10'}
     dev: true
 
-  /eslint-config-next@12.1.5(eslint@8.14.0)(next@12.1.5)(typescript@5.2.2):
+  /eslint-config-next@12.1.5(eslint@8.14.0)(next@12.1.5)(typescript@4.9.4):
     resolution: {integrity: sha512-P+DCt5ti63KhC0qNLzrAmPcwRGq8pYqgcf/NNr1E+WjCrMkWdCAXkIANTquo+kcO1adR2k1lTo5GCrNUtKy4hQ==}
     peerDependencies:
       eslint: ^7.23.0 || ^8.0.0
@@ -1774,7 +1788,7 @@ packages:
     dependencies:
       '@next/eslint-plugin-next': 12.1.5
       '@rushstack/eslint-patch': 1.0.8
-      '@typescript-eslint/parser': 5.10.1(eslint@8.14.0)(typescript@5.2.2)
+      '@typescript-eslint/parser': 5.10.1(eslint@8.14.0)(typescript@4.9.4)
       eslint: 8.14.0
       eslint-import-resolver-node: 0.3.4
       eslint-import-resolver-typescript: 2.4.0(eslint-plugin-import@2.25.2)(eslint@8.14.0)
@@ -1783,7 +1797,7 @@ packages:
       eslint-plugin-react: 7.29.1(eslint@8.14.0)
       eslint-plugin-react-hooks: 4.3.0(eslint@8.14.0)
       next: 12.1.5(react-dom@17.0.2)(react@17.0.2)
-      typescript: 5.2.2
+      typescript: 4.9.4
     transitivePeerDependencies:
       - eslint-import-resolver-webpack
       - supports-color
@@ -1847,7 +1861,7 @@ packages:
       eslint-import-resolver-webpack:
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.10.1(eslint@8.14.0)(typescript@5.2.2)
+      '@typescript-eslint/parser': 5.10.1(eslint@8.14.0)(typescript@4.9.4)
       debug: 3.2.7
       eslint: 8.14.0
       eslint-import-resolver-node: 0.3.9
@@ -1866,7 +1880,7 @@ packages:
       '@typescript-eslint/parser':
         optional: true
     dependencies:
-      '@typescript-eslint/parser': 5.10.1(eslint@8.14.0)(typescript@5.2.2)
+      '@typescript-eslint/parser': 5.10.1(eslint@8.14.0)(typescript@4.9.4)
       array-includes: 3.1.7
       array.prototype.flat: 1.3.2
       debug: 2.6.9
@@ -3736,7 +3750,7 @@ packages:
     engines: {node: '>=6.10'}
     dev: true
 
-  /ts-node-dev@1.1.8(typescript@5.2.2):
+  /ts-node-dev@1.1.8(typescript@4.9.4):
     resolution: {integrity: sha512-Q/m3vEwzYwLZKmV6/0VlFxcZzVV/xcgOt+Tx/VjaaRHyiBcFlV0541yrT09QjzzCxlDZ34OzKjrFAynlmtflEg==}
     engines: {node: '>=0.8.0'}
     hasBin: true
@@ -3755,12 +3769,12 @@ packages:
       rimraf: 2.7.1
       source-map-support: 0.5.21
       tree-kill: 1.2.2
-      ts-node: 9.1.1(typescript@5.2.2)
+      ts-node: 9.1.1(typescript@4.9.4)
       tsconfig: 7.0.0
-      typescript: 5.2.2
+      typescript: 4.9.4
     dev: true
 
-  /ts-node@10.7.0(@types/node@17.0.31)(typescript@5.2.2):
+  /ts-node@10.7.0(@types/node@17.0.31)(typescript@4.9.4):
     resolution: {integrity: sha512-TbIGS4xgJoX2i3do417KSaep1uRAW/Lu+WAL2doDHC0D6ummjirVOXU5/7aiZotbQ5p1Zp9tP7U6cYhA0O7M8A==}
     hasBin: true
     peerDependencies:
@@ -3786,12 +3800,12 @@ packages:
       create-require: 1.1.1
       diff: 4.0.2
       make-error: 1.3.6
-      typescript: 5.2.2
+      typescript: 4.9.4
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
     dev: true
 
-  /ts-node@9.1.1(typescript@5.2.2):
+  /ts-node@9.1.1(typescript@4.9.4):
     resolution: {integrity: sha512-hPlt7ZACERQGf03M253ytLY3dHbGNGrAq9qIHWUY9XHYl1z7wYngSr3OQ5xmui8o2AaxsONxIzjafLUiWBo1Fg==}
     engines: {node: '>=10.0.0'}
     hasBin: true
@@ -3803,7 +3817,7 @@ packages:
       diff: 4.0.2
       make-error: 1.3.6
       source-map-support: 0.5.21
-      typescript: 5.2.2
+      typescript: 4.9.4
       yn: 3.1.1
     dev: true
 
@@ -3829,14 +3843,14 @@ packages:
     resolution: {integrity: sha512-Xni35NKzjgMrwevysHTCArtLDpPvye8zV/0E4EyYn43P7/7qvQwPh9BGkHewbMulVntbigmcT7rdX3BNo9wRJg==}
     dev: true
 
-  /tsutils@3.21.0(typescript@5.2.2):
+  /tsutils@3.21.0(typescript@4.9.4):
     resolution: {integrity: sha512-mHKK3iUXL+3UF6xL5k0PEhKRUBKPBCv/+RkEOpjRWxxx27KKRBmmA60A9pgOUvMi8GKhRMPEmjBRPzs2W7O1OA==}
     engines: {node: '>= 6'}
     peerDependencies:
       typescript: '>=2.8.0 || >= 3.2.0-dev || >= 3.3.0-dev || >= 3.4.0-dev || >= 3.5.0-dev || >= 3.6.0-dev || >= 3.6.0-beta || >= 3.7.0-dev || >= 3.7.0-beta'
     dependencies:
       tslib: 1.14.1
-      typescript: 5.2.2
+      typescript: 4.9.4
     dev: true
 
   /type-check@0.4.0:
@@ -3889,9 +3903,9 @@ packages:
       is-typed-array: 1.1.12
     dev: true
 
-  /typescript@5.2.2:
-    resolution: {integrity: sha512-mI4WrpHsbCIcwT9cF4FZvr80QUeKvsUsUvKDoR+X/7XHQH98xYD8YHZg7ANtz2GtZt/CBq2QJ0thkGJMHfqc1w==}
-    engines: {node: '>=14.17'}
+  /typescript@4.9.4:
+    resolution: {integrity: sha512-Uz+dTXYzxXXbsFpM86Wh3dKCxrQqUcVMxwU54orwlJjOpO3ao8L7j5lH+dWfTwgCwIuM9GQ2kvVotzYJMXTBZg==}
+    engines: {node: '>=4.2.0'}
     hasBin: true
     dev: true
 

@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
 
-import { GlobalConfig } from '.prisma/client';
+import { GlobalConfig } from '@prisma/client';
 
 import { prisma } from '../../lib/db';
 import { getToken } from 'next-auth/jwt';
