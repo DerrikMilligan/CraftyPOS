@@ -13,9 +13,11 @@ export const numberHasDecimal = (num: number) => num % 1 != 0;
 export const formatMoney = (d: Dinero<number>, forceDecimal = false): string => {
   const snapshot = toSnapshot(d);
 
-  return forceDecimal || numberHasDecimal(snapshot.amount)
-    ? snapshot.amount.toFixed(2)
-    : snapshot.amount.toFixed(0);
+  const amount = (snapshot.amount / 100);
+
+  return forceDecimal || numberHasDecimal(amount)
+    ? amount.toFixed(2)
+    : amount.toFixed(0);
 }
 
 export const moneyToNumber = (d: Dinero<number>): number => parseFloat(formatMoney(d));
