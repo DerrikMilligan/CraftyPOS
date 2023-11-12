@@ -29,7 +29,7 @@ const credentialsAreValid = async ({ email, username, password }: UserCredential
     where: {
       OR: [
         { username: username || '' },
-        { email   : email    || '' },
+        // { email   : email    || '' },
       ],
     },
   });
