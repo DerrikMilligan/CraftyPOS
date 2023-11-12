@@ -18,6 +18,7 @@ import {
 import { useModals } from '@mantine/modals';
 import { useForm } from '@mantine/form';
 import { CurrencyDollar, Pencil, X } from 'tabler-icons-react';
+import { useLocalStorage } from '@mantine/hooks';
 
 import { Item, Tag, Vendor } from '@prisma/client';
 
@@ -41,6 +42,11 @@ const Inventory: NextPage = () => {
   const { vendors } = useVendors();
   const { tags, addTag } = useTags();
 
+  const [ lastUsedVendor, setLastUsedVendor ] = useLocalStorage({
+    key: 'last-used-vendor',
+    defaultValue: vendors?.[0]?.id || 1,
+  });
+
   const { status: authStatus } = useSession();
   const modals = useModals();
 
@@ -48,11 +54,11 @@ const Inventory: NextPage = () => {
     initialValues: {
       id      : 0,
       name    : '',
-      stock   : 0,
-      price   : 0.0,
+      stock   : undefined,
+      price   : undefined,
       vendorId: vendors?.[0]?.id || 0,
       Tags    : [] as Tag[],
-    } as Item & { Vendor: Vendor, Tags: Tag[] },
+    } as Partial<Item & { Vendor: Vendor, Tags: Tag[] }>,
 
     // validate: {
     // },
@@ -87,6 +93,8 @@ const Inventory: NextPage = () => {
   const openModal = (item: Item & { Vendor: Vendor, Tags: Tag[] } | null = null) => {
     form.reset();
 
+    form.setFieldValue('vendorId', lastUsedVendor);
+
     if (item !== null)
       form.setValues(item);
 
@@ -98,17 +106,19 @@ const Inventory: NextPage = () => {
 
     const isNewItem = values.id === 0;
 
-    if (isNewItem)
+    if (isNewItem) {
       await addItem(values);
-    else
+      setLastUsedVendor(values.vendorId ?? 0);
+    } else {
       await updateItem(values);
+    }
   });
 
   // Create a tag and wait for the response and add it to the form
   const createTag = async (tagName: string) => {
     const tag = await addTag({ name: tagName } as Tag);
     if (tag)
-      form.setValues({ ...form.values, Tags: [ ...form.values.Tags, tag ] })
+      form.setValues({ ...form.values, Tags: [ ...(form.values?.Tags ?? []), tag ] })
   };
 
   // When tags change we get a list of strings, and we can get a bogus one that hasn't finished
@@ -129,6 +139,8 @@ const Inventory: NextPage = () => {
       <Modal
         centered
         opened={modalOpened}
+        closeOnClickOutside={false}
+        closeOnEscape={true}
         onClose={() => setModalOpened(false)}
         title={form.values.id === 0 ? 'Add New Item' : 'Update Item'}
         size="lg"
@@ -145,6 +157,7 @@ const Inventory: NextPage = () => {
             <NumberInput
               label="Stock"
               required
+              placeholder="0"
               min={0}
               {...form.getInputProps('stock')}
             />
@@ -152,6 +165,7 @@ const Inventory: NextPage = () => {
               label="Price"
               required
               icon={<CurrencyDollar size={18} color="lime" />}
+              placeholder="0.00"
               precision={2}
               min={0}
               {...form.getInputProps('price')}
@@ -169,7 +183,7 @@ const Inventory: NextPage = () => {
               data={tags?.map(tag => tag.name) || []}
               getCreateLabel={(tagName) => `+ Create ${tagName}`}
               onCreate={createTag}
-              value={form.values.Tags.map(t => t?.name || '')}
+              value={(form.values?.Tags ?? []).map(t => t?.name || '')}
               onChange={tagsChanged}
             />
             <Group position="right" mt="lg">
@@ -256,6 +270,12 @@ const Inventory: NextPage = () => {
                   </tr>
                 ))
               }
+              <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+              </tr>
             </tbody>
           </Table>
         </ScrollArea>
@@ -280,3 +300,4 @@ const Inventory: NextPage = () => {
 };
 
 export default Inventory;
+
