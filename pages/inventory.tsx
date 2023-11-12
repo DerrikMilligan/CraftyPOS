@@ -106,11 +106,22 @@ const Inventory: NextPage = () => {
 
     const isNewItem = values.id === 0;
 
+    // Convert it back to having values for everything...
+    const itemData = {
+      id      : 0,
+      name    : '',
+      stock   : 0,
+      price   : 0.0,
+      vendorId: vendors?.[0]?.id || 0,
+      Tags    : [] as Tag[],
+      ...values,
+    };
+
     if (isNewItem) {
-      await addItem(values);
+      await addItem(itemData);
       setLastUsedVendor(values.vendorId ?? 0);
     } else {
-      await updateItem(values);
+      await updateItem(itemData);
     }
   });
 
