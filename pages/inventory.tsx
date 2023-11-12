@@ -178,6 +178,8 @@ const Inventory: NextPage = () => {
               icon={<CurrencyDollar size={18} color="lime" />}
               placeholder="0.00"
               precision={2}
+              step={0.05}
+              inputMode="decimal"
               min={0}
               {...form.getInputProps('price')}
             />
