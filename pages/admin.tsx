@@ -9,7 +9,6 @@ import {
   Button,
   Card,
   Container,
-  Grid,
   Group,
   Loader,
   Radio,
@@ -19,11 +18,11 @@ import {
   Tabs,
   Text,
   TextInput,
-  Title, useMantineTheme,
+  Title,
 } from '@mantine/core';
 import { Barcode as BarcodeIcon, User as UserIcon } from 'tabler-icons-react';
 
-import { Role, User } from '@prisma/client';
+import { Role } from '@prisma/client';
 import { showNotification } from '@mantine/notifications';
 import UseItems from '../lib/hooks/useItems';
 
@@ -32,14 +31,11 @@ const Admin: NextPage = () => {
   const [ username, setUsername ] = useState('');
   const [ password, setPassword ] = useState('');
   const [ password2, setPassword2 ] = useState('');
-  
-  // const theme = useMantineTheme();
-  // theme.colorScheme
-  
+
   const { data: sessionData, status: authStatus } = useSession();
-  
+
   const { items, isLoading, isError } = UseItems('all');
-  
+
   if (isError) return (
     <Container p={0}>
       <Card p="lg">
@@ -49,14 +45,14 @@ const Admin: NextPage = () => {
       </Card>
     </Container>
   );
-  
+
   // Handle the loading and error states
   if (authStatus === 'loading' || isLoading) return (
     <Group position="center" mt={75}>
       <Loader color="green" size="lg" />
     </Group>
   );
-  
+
   // @ts-ignore
   if (authStatus === 'unauthenticated' || sessionData?.role !== Role.ADMIN) return (
     <Container p={0}>
@@ -68,7 +64,7 @@ const Admin: NextPage = () => {
       </Card>
     </Container>
   );
-  
+
   const registerUser = async () => {
     if (password !== password2)
       return showNotification({
@@ -76,7 +72,7 @@ const Admin: NextPage = () => {
         color: 'red',
         message: 'The two passwords don\'t match',
       });
-    
+
     const response = await fetch('/api/admin/register', {
       method: 'POST',
       body: JSON.stringify({
@@ -92,33 +88,39 @@ const Admin: NextPage = () => {
     });
 
     const body: GenericResponse = await response.json();
-    
-    if (body.success)
+
+    if (body.success) {
       showNotification({
         title: 'Success!',
         color: 'green',
         message: `Created ${username} successfully!`,
       });
-    else
+
+      // Reset the form
+      setUsername('');
+      setPassword('');
+      setPassword2('');
+    } else {
       showNotification({
         title: 'Uh oh!',
         color: 'red',
         message: `Failed to create ${username} Error: ${body.message}!`,
       });
+    }
   };
-  
+
   return (
     <Container p={0}>
       <Card p="xl">
         <Title order={1}>Admin Tools</Title>
-        
+
         <Space h="md" />
-        
+
         <Tabs variant="outline" tabPadding="md">
           <Tabs.Tab label="Create User" icon={<UserIcon size={14} />}>
             <Title order={3}>Create a new user</Title>
             <Space h="md" />
-            
+
             <form onSubmit={e => e.preventDefault()}>
               <TextInput mb="sm" value={username}  onChange={(event) => setUsername(event.target.value)} label="Username" />
               <TextInput mb="sm" value={password}  onChange={(event) => setPassword(event.target.value)} label="Password" type="password" />
@@ -129,7 +131,7 @@ const Admin: NextPage = () => {
                 <Radio value={Role.USER} label={Role.USER.split(' ').map(w => w[0].toUpperCase() + w.substring(1).toLowerCase()).join(' ')} />
               </RadioGroup>
             </form>
-            
+
             <Space h="md" />
             <Group position="right">
               <Button onClick={registerUser}>Add User</Button>
@@ -158,7 +160,7 @@ const Admin: NextPage = () => {
               }
             </div>
           </Tabs.Tab>
-          
+
         </Tabs>
       </Card>
     </Container>
@@ -166,3 +168,4 @@ const Admin: NextPage = () => {
 };
 
 export default Admin;
+
