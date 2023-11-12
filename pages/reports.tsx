@@ -35,7 +35,7 @@ const Reports: NextPage = () => {
   );
 
   // @ts-ignore
-  if (authStatus === 'unauthenticated' || sessionData?.role !== Role.ADMIN) return (
+  if (authStatus === 'unauthenticated') return (
     <Container p={0}>
       <Card p="lg">
         <Stack align="center">
@@ -45,7 +45,9 @@ const Reports: NextPage = () => {
       </Card>
     </Container>
   );
-  
+
+  const userIsAdmin = sessionData?.role === Role.ADMIN;
+
   const itemSoldMap: Record<number, number> = items?.reduce((acc, item) => {
     acc[item.id] = invoices?.reduce((acc, invoice) => {
       const transaction: Transaction | undefined = invoice.Transactions.find(t => t.itemId === item.id);
@@ -55,10 +57,10 @@ const Reports: NextPage = () => {
 
       return acc + transaction.itemQuantity;
     }, 0) ?? 0;
-    
+
     return acc;
   }, {} as Record<number, number>) ?? {};
-  
+
   const formatDate = (d: Date) => d.getDate() + "-" + (d.getMonth() + 1) + "-" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
 
   return (
@@ -67,13 +69,13 @@ const Reports: NextPage = () => {
         <Title order={1}>Reporting</Title>
 
         <Space h="md" />
-        
+
         <Tabs variant="outline" tabPadding="md">
           <Tabs.Tab label="Inventory Stock" icon={<UserIcon size={14} />}>
             <Title order={3}>Inventory Stock</Title>
-            
+
             <Space h="md" />
-            
+
             <ScrollArea type="auto">
               <Table>
                 <thead>
@@ -120,54 +122,56 @@ const Reports: NextPage = () => {
                 </tbody>
               </Table>
             </ScrollArea>
-            
           </Tabs.Tab>
 
-          <Tabs.Tab label="Vendor Totals" icon={<UserIcon size={14} />}>
-            <Title order={3}>Vendor Totals</Title>
+          {
+            userIsAdmin && (
+              <Tabs.Tab label="Vendor Totals" icon={<UserIcon size={14} />}>
+                <Title order={3}>Vendor Totals</Title>
 
-            <Space h="md" />
+                <Space h="md" />
 
-            <Table>
-              <thead>
-              <tr>
-                <th>id</th>
-                <th>Name</th>
-                <th>Earnings</th>
-              </tr>
-              </thead>
-              <tbody>
-                {
-                  vendors &&
-                  vendors.map(vendor => (
-                    <tr key={vendor.id}>
-                      <td>{vendor.id}</td>
-                      <td>{vendor.firstName} {vendor.lastName}</td>
-                      <td>
-                        <CurrencyDollar size={12} color="lime" />
-                        {
-                          (
-                            invoices?.reduce((acc, invoice) => {
-                              // TODO Need to have more logic here to handle fees/taxes splitting on a per transaction basis
-                              invoice.Transactions.forEach(transaction => {
-                                const item = items?.find(i => i.id === transaction.itemId) || undefined;
+                <Table>
+                  <thead>
+                  <tr>
+                    <th>id</th>
+                    <th>Name</th>
+                    <th>Earnings</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                    {
+                      vendors &&
+                      vendors.map(vendor => (
+                        <tr key={vendor.id}>
+                          <td>{vendor.id}</td>
+                          <td>{vendor.firstName} {vendor.lastName}</td>
+                          <td>
+                            <CurrencyDollar size={12} color="lime" />
+                            {
+                              (
+                                invoices?.reduce((acc, invoice) => {
+                                  // TODO Need to have more logic here to handle fees/taxes splitting on a per transaction basis
+                                  invoice.Transactions.forEach(transaction => {
+                                    const item = items?.find(i => i.id === transaction.itemId) || undefined;
 
-                                if (item && item.vendorId === vendor.id)
-                                  acc += transaction.pricePer * transaction.itemQuantity
-                              });
-                              
-                              return acc;
-                            }, 0) ?? 0
-                          ).toFixed(2)
-                        }
-                      </td>
-                    </tr>
-                  ))
-                }
-              </tbody>
-            </Table>
-          </Tabs.Tab>
+                                    if (item && item.vendorId === vendor.id)
+                                      acc += transaction.pricePer * transaction.itemQuantity
+                                  });
 
+                                  return acc;
+                                }, 0) ?? 0
+                              ).toFixed(2)
+                            }
+                          </td>
+                        </tr>
+                      ))
+                    }
+                  </tbody>
+                </Table>
+              </Tabs.Tab>
+            )
+          }
 
           <Tabs.Tab label="Invoice History" icon={<UserIcon size={14} />}>
             <Title order={3}>Invoice History</Title>
@@ -238,7 +242,7 @@ const Reports: NextPage = () => {
               </tbody>
             </Table>
           </Tabs.Tab>
-          
+
         </Tabs>
       </Card>
     </Container>
@@ -246,3 +250,4 @@ const Reports: NextPage = () => {
 };
 
 export default Reports;
+
