@@ -96,6 +96,8 @@ const Vendors: NextPage = () => {
       <Modal
         centered
         opened={modalOpened}
+        closeOnClickOutside={false}
+        closeOnEscape={true}
         onClose={() => setModalOpened(false)}
         title={form.values.id === 0 ? 'Add New Vendor' : 'Update Vendor'}
         size="lg"
