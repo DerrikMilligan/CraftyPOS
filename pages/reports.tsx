@@ -61,7 +61,7 @@ const Reports: NextPage = () => {
     return acc;
   }, {} as Record<number, number>) ?? {};
 
-  const formatDate = (d: Date) => d.getDate() + "-" + (d.getMonth() + 1) + "-" + d.getFullYear() + " " + d.getHours() + ":" + d.getMinutes();
+  const formatDate = (d: Date) => d.toLocaleDateString() + ' ' + d.toLocaleTimeString('en-US', { timeStyle: 'short' });
 
   return (
     <Container p={0}>
@@ -124,6 +124,93 @@ const Reports: NextPage = () => {
             </ScrollArea>
           </Tabs.Tab>
 
+          <Tabs.Tab label="Invoice History" icon={<UserIcon size={14} />}>
+            <Title order={3}>Invoice History</Title>
+
+            <Space h="md" />
+
+            <Table>
+              <thead>
+              <tr>
+                <th>Sold At</th>
+                <th>Number Sold</th>
+                <th>Item Name</th>
+                <th>Earnings</th>
+              </tr>
+              </thead>
+              <tbody>
+              {
+                invoices &&
+                invoices.map(invoice => (
+                  <>
+                    <tr key={invoice.id}>
+                      <td colSpan={4}>{formatDate(new Date(invoice.timestamp))}</td>
+                    </tr>
+                    {
+                      invoice.Transactions &&
+                      invoice.Transactions.map(transaction => (
+                        <tr key={transaction.id}>
+                          <td></td>
+                          <td>
+                            {transaction.itemQuantity}
+                            &nbsp;x <CurrencyDollar size={12} color="lime" />
+                            {transaction.pricePer.toFixed(2)}
+                          </td>
+                          <td>
+                            <Stack spacing="xs">
+                              <div>{items && items.find(item => item.id === transaction.itemId)?.name}</div>
+                              {items && items.find(item => item.id === transaction.itemId)?.Tags.map((tag) => {
+                                return (
+                                  <div key={tag.id}>
+                                    <Badge color="green" size="xs">
+                                      {tag.name}
+                                    </Badge>
+                                  </div>
+                                )
+                              })}
+                            </Stack>
+                          </td>
+                          <td>
+                            <CurrencyDollar size={12} color="lime" />
+                            {(transaction.itemQuantity * transaction.pricePer).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))
+                    }
+                    <tr>
+                      <td colSpan={3} align='right'>
+                        <div>Taxes:</div>
+                        <div>Fees:</div>
+                        <div>Total:</div>
+                      </td>
+                      <td>
+                        <div>
+                          <CurrencyDollar size={12} color="lime" />
+                          {invoice.salesTax.toFixed(2)}
+                        </div>
+                        <div>
+                          <CurrencyDollar size={12} color="lime" />
+                          {invoice.processingFees.toFixed(2)}
+                        </div>
+                        <div>
+                          <CurrencyDollar size={12} color="lime" />
+                          {invoice.total.toFixed(2)}
+                        </div>
+                      </td>
+                    </tr>
+                    <tr style={{ backgroundColor: 'rgba(0, 0, 0, 0.4)', lineHeight: 2 }}>
+                      <td>&nbsp;</td>
+                      <td></td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  </>
+                ))
+              }
+              </tbody>
+            </Table>
+          </Tabs.Tab>
+
           {
             userIsAdmin && (
               <Tabs.Tab label="Vendor Totals" icon={<UserIcon size={14} />}>
@@ -172,76 +259,6 @@ const Reports: NextPage = () => {
               </Tabs.Tab>
             )
           }
-
-          <Tabs.Tab label="Invoice History" icon={<UserIcon size={14} />}>
-            <Title order={3}>Invoice History</Title>
-
-            <Space h="md" />
-
-            <Table>
-              <thead>
-              <tr>
-                <th>Invoice Id</th>
-                <th>Item Id</th>
-                <th>Item Name</th>
-                <th>Earnings</th>
-              </tr>
-              </thead>
-              <tbody>
-              {
-                invoices &&
-                invoices.map(invoice => (
-                  <>
-                    <tr key={invoice.id}>
-                      <td colSpan={4}>{invoice.id} - {formatDate(new Date(invoice.timestamp))}</td>
-                    </tr>
-                    {
-                      invoice.Transactions &&
-                      invoice.Transactions.map(transaction => (
-                        <tr key={transaction.id}>
-                          <td></td>
-                          <td>{transaction.itemQuantity}</td>
-                          <td>{items && items.find(item => item.id === transaction.itemId)?.name}</td>
-                          <td>
-                            <CurrencyDollar size={12} color="lime" />
-                            {(transaction.itemQuantity * transaction.pricePer).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))
-                    }
-                    <tr>
-                      <td colSpan={3} align='right'>
-                        <div>Taxes:</div>
-                        <div>Fees:</div>
-                        <div>Total:</div>
-                      </td>
-                      <td>
-                        <div>
-                          <CurrencyDollar size={12} color="lime" />
-                          {invoice.salesTax.toFixed(2)}
-                        </div>
-                        <div>
-                          <CurrencyDollar size={12} color="lime" />
-                          {invoice.processingFees.toFixed(2)}
-                        </div>
-                        <div>
-                          <CurrencyDollar size={12} color="lime" />
-                          {invoice.total.toFixed(2)}
-                        </div>
-                      </td>
-                    </tr>
-                    <tr style={{ backgroundColor: 'rgba(0, 0, 0, 0.2)', lineHeight: 1 }}>
-                      <td>&nbsp;</td>
-                      <td></td>
-                      <td></td>
-                      <td></td>
-                    </tr>
-                  </>
-                ))
-              }
-              </tbody>
-            </Table>
-          </Tabs.Tab>
 
         </Tabs>
       </Card>
