@@ -52,12 +52,12 @@ import type { Transaction, Invoice } from '../lib/db';
 
 const Checkout: NextPage = () => {
   const modals = useModals();
-  
+
   const { data: authData, status: authStatus } = useSession();
-  
+
   // @ts-ignore This is an extra property that DOES exist
   const isAdmin = authData?.user?.role === 'ADMIN';
-  
+
   // Register the various states we have
   const [ itemFilter, setItemFilter ] = useState('');
   const [ scanning, setScanning ] = useState(false);
@@ -65,15 +65,15 @@ const Checkout: NextPage = () => {
   const [ paymentMethodName, setPaymentMethodName ] = useState('Card');
   const [ cashAmount, setCashAmount ] = useState(0);
   const [ checkNumber, setCheckNumber ] = useState('');
-  
+
   // Get the config and payment methods
   // These should be cached indefinitely after the first time they're loaded
   const { paymentMethods, isError: paymentIsError, isLoading: paymentIsLoading } = usePaymentMethods();
   const { config, isError: configIsError, isLoading: configIsLoading } = useConfig();
-  
+
   // Get the items
   const { items, isLoading, isError } = useItems('all');
-  
+
   // Make the list of items for the autocomplete to use
   const autocompleteItems = useMemo(() => items
     // Make sure any items we've added aren't part of the search list anymore
@@ -86,14 +86,14 @@ const Checkout: NextPage = () => {
         item
       } as AutocompleteItemProps;
     }) || [], [ items, transactions ]);
-  
+
   const paymentMethod = useMemo(() => (Array.isArray(paymentMethods) ? paymentMethods : []).find(method => method.name === paymentMethodName), [ paymentMethods, paymentMethodName ]);
-  
+
   const subTotal = useMemo(() => calculateSubTotal(transactions), [ transactions ]);
   const salesTax = useMemo(() => calculateSalesTax(subTotal, config), [ subTotal, config ]);
   const processingFees = useMemo(() => calculateProcessingFees(subTotal, paymentMethod), [ subTotal, paymentMethod ])
   const total = useMemo(() => calculateTotal(subTotal, salesTax, processingFees, paymentMethod), [  subTotal, salesTax, processingFees, paymentMethod  ]);
-  
+
   // Handle the loading and error states
   if (authStatus === 'unauthenticated') return (
     <Container p={0}>
@@ -122,13 +122,13 @@ const Checkout: NextPage = () => {
 
   /**
    * Add an item from the autocomplete component to the invoice transactions
-   * 
+   *
    * @param autocompleteItem
    */
   const addItemToInvoice = (autocompleteItem: AutocompleteItemProps) => {
     // Wipe out the search filter
     setItemFilter('');
-    
+
     // Add 
     setTransactions(
       produce(draft => {
@@ -143,11 +143,11 @@ const Checkout: NextPage = () => {
       })
     );
   };
-  
+
   /**
    * Allows for updating a transaction field dynamically using the immer produce which
    * will modify the list in place
-   * 
+   *
    * @param itemId
    * @param field
    * @param value
@@ -178,7 +178,7 @@ const Checkout: NextPage = () => {
   const saveInvoice = async () => {
     if (paymentMethod === undefined)
       return console.error('No payment method for some reason');
-    
+
     const invoice = {
       checkNumber: checkNumber,
       paymentMethodId: paymentMethod.id,
@@ -188,7 +188,7 @@ const Checkout: NextPage = () => {
       total: moneyToNumber(total),
       Transactions: transactions,
     } as Invoice;
-    
+
     const response = await fetch('/api/invoice', {
       method: 'POST',
       body: JSON.stringify(invoice),
@@ -197,9 +197,9 @@ const Checkout: NextPage = () => {
         'Accept': 'application/json',
       }
     });
-    
+
     const body = await response.json();
-    
+
     if (body?.success === false) {
       showNotification({
         title: 'Uh Oh!',
@@ -238,14 +238,14 @@ const Checkout: NextPage = () => {
       }
 
       const item = items?.find(i => i.id === id) ?? undefined;
-      
+
       if (item === undefined) {
         console.error("Couldn't find an item with the id: ", id);
         return { success: false, message: `Couldn't find an item with the id: ${id}` };
       }
-      
+
       const autocompleteItem = autocompleteItems?.find(i => i.item.id === id) ?? undefined;
-      
+
       if (autocompleteItem === undefined) {
         console.error("Couldn't find an item with the id: ", id);
         return { success: false, message: 'Item already added to the invoice' };
@@ -264,9 +264,9 @@ const Checkout: NextPage = () => {
    */
   const barcodeScanned = (value: string) => {
     setScanning(false);
-    
+
     const itemResponse = getAutocompleteItemFromScannedData(value);
-    
+
     if (itemResponse.success === false) {
       if (itemResponse.message !== 'Item already added to the invoice')
         return showNotification({
@@ -284,7 +284,7 @@ const Checkout: NextPage = () => {
           message: 'Item has already been added to the invoice! Try increasing the quantity if you need to sell more.',
         });
     }
-    
+
     addItemToInvoice(itemResponse.data);
   };
 
@@ -308,15 +308,15 @@ const Checkout: NextPage = () => {
           <Group>
             <Title>Create Invoice</Title>
           </Group>
-          
+
           <Space h="md" />
-          
+
           <Group position="left">
             <Button onClick={() => setScanning(true)}>Scan Item</Button>
           </Group>
-          
+
           <Space h="md" />
-          
+
           <Group grow>
             <Autocomplete
               // List of items
@@ -335,7 +335,7 @@ const Checkout: NextPage = () => {
               // initiallyOpened
             />
           </Group>
-          
+
           <Space h="md" />
 
           <ScrollArea type="auto">
@@ -405,16 +405,22 @@ const Checkout: NextPage = () => {
                         // styles={{ input: { padding: 2 } }}
                       />
                     </td>
-                    
+
                     <td style={{ minWidth: 100 }}>
                       { transaction.Item.name }
                       <Group spacing={2}>
                         {
                           transaction.Item.Tags &&
                           transaction.Item.Tags.length > 0 &&
-                          transaction.Item.Tags.map((tag) => (
-                            <Badge key={tag.id} size="xs" color="green">{tag.name}</Badge>
-                          ))
+                          transaction.Item.Tags
+                            .sort((a, b) => {
+                              if (a.name < b.name) return -1;
+                              if (a.name > b.name) return 1;
+                              return 0;
+                            })
+                            .map((tag) => (
+                              <Badge key={tag.id} size="xs" color="green">{tag.name}</Badge>
+                            ))
                         }
                       </Group>
                     </td>
@@ -485,9 +491,9 @@ const Checkout: NextPage = () => {
               </tr>
             </tbody>
           </Table>
-        
+
           <Space h="md" />
-          
+
           <Group position="right" align="center">
             <NativeSelect
               label="Payment Method"
@@ -533,7 +539,7 @@ const Checkout: NextPage = () => {
               ></TextInput>
             )
           }
-        
+
           </Group>
 
           <Space h="md" />

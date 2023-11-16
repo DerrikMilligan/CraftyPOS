@@ -4,6 +4,7 @@ import { Vendor } from '@prisma/client';
 
 import { prisma } from '../../../lib/db';
 import { getToken } from 'next-auth/jwt';
+import { titleCase } from 'lib/textHelpers';
 
 export default async function handler(
   req: NextApiRequest,
@@ -20,13 +21,13 @@ export default async function handler(
 
     if (firstName === undefined || lastName === undefined)
       return res.status(500).json({ success: false, message: 'Missing required data' });
-    
+
     const vendor = await prisma.vendor.create({
       data: {
-        firstName,
-        lastName,
         color,
-        email: email || '',
+        firstName: titleCase(firstName),
+        lastName : titleCase(lastName),
+        email    : email || '',
       }
     });
 

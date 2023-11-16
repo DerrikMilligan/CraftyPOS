@@ -26,11 +26,17 @@ export const AutocompleteItem = forwardRef<HTMLDivElement, AutocompleteItemProps
           <Group spacing="xs">
             {
               item.Tags &&
-              item.Tags.map((tag) => (
-                <Badge color="green" key={tag.id} size="xs">
-                  {tag.name}
-                </Badge>
-              ))
+              item.Tags
+                .sort((a, b) => {
+                  if (a.name < b.name) return -1;
+                  if (a.name > b.name) return 1;
+                  return 0;
+                })
+                .map((tag) => (
+                  <Badge color="green" key={tag.id} size="xs">
+                    {tag.name}
+                  </Badge>
+                ))
             }
           </Group>
         </Grid.Col>
