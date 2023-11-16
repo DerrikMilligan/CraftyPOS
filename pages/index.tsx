@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { NextPage } from 'next'
 import { signIn, useSession } from 'next-auth/react';
-import produce from "immer"
+import produce from 'immer';
 
 import { CurrencyDollar, Search, X } from 'tabler-icons-react';
 import {
@@ -82,7 +82,7 @@ const Checkout: NextPage = () => {
     ?.map(item => {
       return {
         value: item.name,
-        key: item.id,
+        key  : item.id,
         item
       } as AutocompleteItemProps;
     }) || [], [ items, transactions ]);
@@ -123,22 +123,22 @@ const Checkout: NextPage = () => {
   /**
    * Add an item from the autocomplete component to the invoice transactions
    *
-   * @param autocompleteItem
+   * @param autoCompleteItem
    */
-  const addItemToInvoice = (autocompleteItem: AutocompleteItemProps) => {
+  const addItemToInvoice = (autoCompleteItem: AutocompleteItemProps) => {
     // Wipe out the search filter
     setItemFilter('');
 
-    // Add 
+    // Add
     setTransactions(
       produce(draft => {
         draft.push({
-          id: 0,
-          invoiceId: 0,
-          itemId: autocompleteItem.item.id,
+          id          : 0,
+          invoiceId   : 0,
           itemQuantity: 1,
-          pricePer: autocompleteItem.item.price,
-          Item: autocompleteItem.item,
+          itemId      : autoCompleteItem.item.id,
+          pricePer    : autoCompleteItem.item.price,
+          Item        : autoCompleteItem.item,
         });
       })
     );
@@ -411,8 +411,10 @@ const Checkout: NextPage = () => {
                       <Group spacing={2}>
                         {
                           transaction.Item.Tags &&
+                          Array.isArray(transaction.Item.Tags) &&
                           transaction.Item.Tags.length > 0 &&
-                          transaction.Item.Tags
+                          // Create a new array of the tags that's sortable because it's readonly
+                          [ ...transaction.Item.Tags ]
                             .sort((a, b) => {
                               if (a.name < b.name) return -1;
                               if (a.name > b.name) return 1;

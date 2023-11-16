@@ -3,6 +3,7 @@ import useSWR from 'swr';
 import { Invoice, Transaction } from '@prisma/client';
 
 import { getFetcher, jsonDelete } from '../fetching';
+import { showNotification } from '@mantine/notifications';
 
 const endpoint = '/api/invoice';
 
@@ -27,8 +28,10 @@ export const useInvoices = () => {
           if (response.success === false)
             throw new Error('Bubble up the error');
 
+          showNotification({ color: 'green', title: 'Removed!', message: 'Invoice removed successfully' });
           return updatedInvoices;
         } catch (e) {
+          showNotification({ color: 'red', title: 'Uh oh!', message: 'Something went wrong with removing the invoice! Try again later.' });
           console.error(e);
         }
 

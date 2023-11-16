@@ -273,7 +273,8 @@ const Inventory: NextPage = () => {
                       <Group spacing="xs">
                         {
                           item.Tags &&
-                          item.Tags
+                          Array.isArray(item.Tags) &&
+                          [ ...item.Tags ]
                             .sort((a, b) => {
                               if (a.name < b.name) return -1;
                               if (a.name > b.name) return 1;

@@ -1,3 +1,4 @@
+import React from 'react';
 import type { NextPage } from 'next'
 import { signIn, useSession } from 'next-auth/react';
 
@@ -146,8 +147,8 @@ const Reports: NextPage = () => {
               {
                 invoices &&
                 invoices.map(invoice => (
-                  <>
-                    <tr key={invoice.id}>
+                  <React.Fragment key={invoice.id}>
+                    <tr>
                       <td colSpan={4}>{formatDate(new Date(invoice.timestamp))}</td>
                     </tr>
                     {
@@ -166,8 +167,7 @@ const Reports: NextPage = () => {
                               {
 
                                 items &&
-                                items
-                                  .find(item => item.id === transaction.itemId)?.Tags
+                                [ ...(items.find(item => item.id === transaction.itemId)?.Tags ?? []) ]
                                   .sort((a, b) => {
                                     if (a.name < b.name) return -1;
                                     if (a.name > b.name) return 1;
@@ -238,7 +238,7 @@ const Reports: NextPage = () => {
                       <td></td>
                       <td></td>
                     </tr>
-                  </>
+                  </React.Fragment>
                 ))
               }
               </tbody>

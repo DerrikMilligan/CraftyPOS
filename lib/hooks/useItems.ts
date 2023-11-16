@@ -15,15 +15,14 @@ const loadingVendor = {
 // There's a special way of calling this where we pass in 'all' which will return all the objects
 export const useItems = (initialPage: number | 'all') => {
   const page = typeof initialPage === 'number' ? initialPage : 1;
+  const pageQueryKey = initialPage === 'all' ? 'all' : page.toString();
 
   const {
     error,
     mutate,
     data,
   } = useSWR<Pagination<Array<Item & { Vendor: Vendor, Tags: Tag[] }>>>(
-    initialPage !== 'all'
-      ? `${endpoint}?page=${page}` 
-      : `${endpoint}`,
+    `${endpoint}?page=${pageQueryKey}`,
     getFetcher()
   );
 
