@@ -113,6 +113,7 @@ const Inventory: NextPage = () => {
       stock   : 0,
       price   : 0.0,
       vendorId: vendors?.[0]?.id || 0,
+      archived: false,
       Tags    : [] as Tag[],
       ...values,
     };
@@ -193,7 +194,7 @@ const Inventory: NextPage = () => {
               label="Tags"
               searchable
               creatable
-              data={tags?.map(tag => tag.name) || []}
+              data={tags?.map(tag => tag.name).sort() || []}
               getCreateLabel={(tagName) => `+ Create ${tagName}`}
               onCreate={createTag}
               value={(form.values?.Tags ?? []).map(t => t?.name || '')}
@@ -272,11 +273,17 @@ const Inventory: NextPage = () => {
                       <Group spacing="xs">
                         {
                           item.Tags &&
-                          item.Tags.map((tag) => (
-                            <Badge color="green" key={tag.id} size="xs">
-                              {tag.name}
-                            </Badge>
-                          ))
+                          item.Tags
+                            .sort((a, b) => {
+                              if (a.name < b.name) return -1;
+                              if (a.name > b.name) return 1;
+                              return 0;
+                            })
+                            .map((tag) => (
+                              <Badge color="green" key={tag.id} size="xs">
+                                {tag.name}
+                              </Badge>
+                            ))
                         }
                       </Group>
                     </td>

@@ -57,6 +57,7 @@ model Item {
   price        Float
   vendorId     Int
   Vendor       Vendor        @relation(fields: [vendorId], references: [id])
+  archived     Boolean       @default(false)
   Transactions Transaction[]
   Tags         Tag[]
 }
@@ -80,6 +81,7 @@ model Invoice {
   total           Float
   checkNumber     String
   timestamp       DateTime      @default(now())
+  archived        Boolean       @default(false)
 //  Customer        Customer      @relation(fields: [customerId], references: [id])
   PaymentMethod   PaymentMethod @relation(fields: [paymentMethodId], references: [id])
   Transactions    Transaction[]

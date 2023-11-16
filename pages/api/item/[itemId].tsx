@@ -25,7 +25,7 @@ export default async function handler(
 
     if (vendor === null)
       return res.status(500).json({ success: false, message: 'Invalid vendor' });
-    
+
     try {
       const item = await prisma.item.update({
         data: {
@@ -44,17 +44,17 @@ export default async function handler(
       return res.status(500).json({ success: false, message: `Failed to update: ${(e as Error).message}` });
     }
   }
-  
+
   if (req.method === 'DELETE') {
     const itemId = req.query.itemId as string;
-    
+
     try {
       const id = Number.parseInt(itemId);
-      await prisma.item.delete({ where: { id } });
+      await prisma.item.update({ where: { id }, data: { archived: true } });
     } catch (e) {
       return res.status(500).json({ success: false, message: 'Failed to delete item!' });
     }
-    
+
     return res.status(200).json({ success: true, message: 'Successfully deleted item' });
   }
 

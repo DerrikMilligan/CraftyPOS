@@ -5,6 +5,8 @@ import { Tag } from '@prisma/client';
 import { prisma } from '../../../lib/db';
 import { getToken } from 'next-auth/jwt';
 
+import { titleCase } from 'lib/textHelpers';
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse<Tag|Tag[]|GenericResponse<null>>
@@ -20,8 +22,8 @@ export default async function handler(
 
     if (name === undefined)
       return res.status(500).json({ success: false, message: 'Missing required data' });
-    
-    const tag = await prisma.tag.create({ data: { name } });
+
+    const tag = await prisma.tag.create({ data: { name: titleCase(name) } });
 
     return res.status(200).json(tag);
   }

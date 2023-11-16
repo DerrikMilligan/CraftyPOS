@@ -15,7 +15,7 @@ const loadingVendor = {
 // There's a special way of calling this where we pass in 'all' which will return all the objects
 export const useItems = (initialPage: number | 'all') => {
   const page = typeof initialPage === 'number' ? initialPage : 1;
-  
+
   const {
     error,
     mutate,
@@ -26,9 +26,9 @@ export const useItems = (initialPage: number | 'all') => {
       : `${endpoint}`,
     getFetcher()
   );
-  
+
   const items = data?.data;
-  
+
   const addItem = async (item: Item) => {
     if (items === undefined || data?.totalPages === undefined)
       throw new Error('Attempting to add item before items resolved');
@@ -54,7 +54,7 @@ export const useItems = (initialPage: number | 'all') => {
         },
       },
     );
-    
+
     return newItem;
   };
 
@@ -63,7 +63,7 @@ export const useItems = (initialPage: number | 'all') => {
       throw new Error('Attempting to update item before items resolved');
 
     const otherItems = items.filter((i) => i.id !== item.id);
-    
+
     await mutate(
       async () => {
         try {
@@ -99,7 +99,7 @@ export const useItems = (initialPage: number | 'all') => {
 
           if (response.success === false)
             throw new Error('Bubble up the error');
-          
+
           showNotification({ color: 'green', title: 'Removed!', message: 'Item removed successfully' });
           return { data: remainingItems, page, totalPages: data?.totalPages };
         } catch (e) {

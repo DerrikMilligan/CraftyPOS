@@ -1,9 +1,11 @@
 import type { NextPage } from 'next'
 import { signIn, useSession } from 'next-auth/react';
 
-import { Role, Transaction } from '@prisma/client';
+import type { Transaction } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 import { Badge, Button, Card, Container, Group, Loader, ScrollArea, Space, Stack, Table, Tabs, Text, Title } from '@mantine/core';
+import { useModals } from '@mantine/modals';
 import { CurrencyDollar, User as UserIcon } from 'tabler-icons-react';
 
 import UseItems from '../lib/hooks/useItems';
@@ -14,8 +16,10 @@ const Reports: NextPage = () => {
   const { data: sessionData, status: authStatus } = useSession();
 
   const { items, isLoading: itemsLoading, isError: itemsError } = UseItems('all');
-  const { invoices, isLoading: invoicesLoading, isError: invoicesError } = UseInvoices();
+  const { invoices, isLoading: invoicesLoading, isError: invoicesError, deleteInvoice } = UseInvoices();
   const { vendors, isLoading: vendorsLoading, isError: vendorsError } = UseVendors();
+
+  const modals = useModals();
 
   if (itemsError || invoicesError || vendorsError) return (
     <Container p={0}>
@@ -159,15 +163,26 @@ const Reports: NextPage = () => {
                           <td>
                             <Stack spacing="xs">
                               <div>{items && items.find(item => item.id === transaction.itemId)?.name}</div>
-                              {items && items.find(item => item.id === transaction.itemId)?.Tags.map((tag) => {
-                                return (
-                                  <div key={tag.id}>
-                                    <Badge color="green" size="xs">
-                                      {tag.name}
-                                    </Badge>
-                                  </div>
-                                )
-                              })}
+                              {
+
+                                items &&
+                                items
+                                  .find(item => item.id === transaction.itemId)?.Tags
+                                  .sort((a, b) => {
+                                    if (a.name < b.name) return -1;
+                                    if (a.name > b.name) return 1;
+                                    return 0;
+                                  })
+                                  .map((tag) => {
+                                    return (
+                                      <div key={tag.id}>
+                                        <Badge color="green" size="xs">
+                                          {tag.name}
+                                        </Badge>
+                                      </div>
+                                    )
+                                  })
+                              }
                             </Stack>
                           </td>
                           <td>
@@ -178,7 +193,26 @@ const Reports: NextPage = () => {
                       ))
                     }
                     <tr>
-                      <td colSpan={3} align='right'>
+                      <td>
+                        <Button
+                          color="red"
+                          variant="outline"
+                          size="xs"
+                          onClick={() => modals.openConfirmModal({
+                            title: 'Remove Item',
+                            centered: true,
+                            children: (
+                              <Text size="sm">Are you sure you want to delete this invoice?</Text>
+                            ),
+                            labels: { confirm: 'Remove Invoice', cancel: 'Cancel' },
+                            confirmProps: { color: 'red' },
+                            onConfirm: () => deleteInvoice(invoice),
+                          })}
+                        >
+                          Delete Transaction
+                        </Button>
+                      </td>
+                      <td colSpan={2} align='right'>
                         <div>Taxes:</div>
                         <div>Fees:</div>
                         <div>Total:</div>

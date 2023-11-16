@@ -4,6 +4,7 @@ import { Item, Tag, Vendor } from '@prisma/client';
 
 import { prisma } from '../../../lib/db';
 import { getToken } from 'next-auth/jwt';
+import { titleCase } from 'lib/textHelpers';
 
 const defaultRowsPerPage = 20;
 
@@ -30,10 +31,11 @@ export default async function handler(
 
     const item = await prisma.item.create({
       data: {
-        name,
         price,
         stock,
+        name    : titleCase(name),
         vendorId: vendor.id,
+        archived: false,
         Tags: { connect: (Tags as Tag[]).map((t) => ({ id: t.id })) },
       },
       include: { Vendor: true, Tags: true },
@@ -48,8 +50,9 @@ export default async function handler(
 
     const page = req.query?.page && (Number.parseInt(req.query.page) - 1) || 0;
     const resultsPerPage = req.query?.count && Number.parseInt(req.query.count) || defaultRowsPerPage;
-    
+
     const items = await prisma.item.findMany({
+      where  : { archived: false },
       orderBy: { name: 'asc' },
       include: { Vendor: true, Tags: true },
       // If our query is for a specific page then limit it. Otherwise return everything!
@@ -58,7 +61,7 @@ export default async function handler(
         skip: page * resultsPerPage,
       }),
     });
-    
+
     const totalItems = await prisma.item.count();
 
     return res.status(200).json({

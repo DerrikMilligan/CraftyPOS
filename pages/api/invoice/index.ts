@@ -20,9 +20,13 @@ export default async function handler(
 
   if (token === null)
     return res.status(500).json({ success: false, message: 'Not authorized to make this request!' });
-  
+
   if (req.method === 'GET') {
-    const invoices = await prisma.invoice.findMany({ include: { Transactions: true }, orderBy: { timestamp: 'desc' } });
+    const invoices = await prisma.invoice.findMany({
+      include: { Transactions: true },
+      orderBy: { timestamp: 'desc' },
+      where  : { archived: false },
+    });
 
     return res.status(200).json(invoices);
   }
@@ -41,10 +45,10 @@ export default async function handler(
 
     if (Transactions === undefined || paymentMethodId === undefined)
       return res.status(500).json({ success: false, message: 'Missing required data' });
-    
+
     if (Array.isArray(Transactions) === false || Transactions.length <= 0)
       return res.status(500).json({ success: false, message: 'Needs at least one transaction' });
-    
+
     const paymentMethod = await prisma.paymentMethod.findFirst({ where: { id: paymentMethodId } });
     if (paymentMethod === null)
       return res.status(500).json({ success: false, message: 'Invalid payment method' });
@@ -52,20 +56,20 @@ export default async function handler(
     const items = await prisma.item.findMany({ where: { id: { in: Transactions.map(t => t.Item.id) } }, include: { Transactions: true } });
     if (items === null || items.length !== Transactions.length)
       return res.status(500).json({ success: false, message: 'Invalid transaction items' });
-    
+
     const transactions = [] as Transaction[];
-    
+
     for (const t of Transactions) {
       const item = items.find(i => i.id === t.itemId);
-      
+
       if (item === undefined)
         return res.status(500).json({ success: false, message: `The item id: ${t.itemId} didn't match up with an item in the database` });
-      
+
       const previouslySold = item.Transactions.reduce((total, i) => total + i.itemQuantity, 0);
-      
+
       if (item.stock < previouslySold + t.itemQuantity)
         return res.status(500).json({ success: false, message: `There isn't enough stock remaining to sell ${t.itemQuantity} of ${item.name}` });
-      
+
       // Create the new item that we'll use that is clean with only the values we want
       transactions.push({
         itemId: item.id,
@@ -74,7 +78,7 @@ export default async function handler(
         pricePer: moneyToNumber($(t.pricePer)),
       } as Transaction);
     }
-    
+
     const globalConfig = await prisma.globalConfig.findFirst();
     if (globalConfig === null)
       return res.status(500).json({ success: false, message: `Couldn't get global config` });
@@ -84,10 +88,10 @@ export default async function handler(
     const newSalesTax = calculateSalesTax(newSubTotal, globalConfig);
     const newProcessingFees = calculateProcessingFees(newSubTotal, paymentMethod);
     const newTotal = calculateTotal(newSubTotal, newSalesTax, newProcessingFees, paymentMethod);
-    
+
     if (moneyToNumber(newSubTotal) !== subTotal)
       return res.status(500).json({ success: false, message: `Sub-total verification failed!` });
-    
+
     if (moneyToNumber(newSalesTax) !== salesTax)
       return res.status(500).json({ success: false, message: `Sales tax verification failed!` });
 
@@ -99,22 +103,23 @@ export default async function handler(
 
     const invoice = await prisma.invoice.create({
       data: {
-        checkNumber: checkNumber,
-        subTotal: moneyToNumber(newSubTotal),
-        salesTax: moneyToNumber(newSalesTax),
-        processingFees: moneyToNumber(newProcessingFees),
-        total: moneyToNumber(newTotal),
+        checkNumber    : checkNumber,
+        subTotal       : moneyToNumber(newSubTotal),
+        salesTax       : moneyToNumber(newSalesTax),
+        processingFees : moneyToNumber(newProcessingFees),
+        total          : moneyToNumber(newTotal),
         paymentMethodId: paymentMethod.id,
-        Transactions: { createMany: { data: transactions } },
+        archived       : false,
+        Transactions   : { createMany: { data: transactions } },
       },
       include: { Transactions: true },
     });
-    
+
     if (invoice === null)
       return res.status(500).json({ success: false, message: `Failed to save invoice` });
 
     return res.status(200).json(invoice);
   }
-  
+
   return res.status(500).json({ success: false, message: 'Invalid request' });
 }
