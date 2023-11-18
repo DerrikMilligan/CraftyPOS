@@ -180,18 +180,18 @@ const Checkout: NextPage = () => {
       return console.error('No payment method for some reason');
 
     const invoice = {
-      checkNumber: checkNumber,
+      checkNumber    : checkNumber,
       paymentMethodId: paymentMethod.id,
-      subTotal: moneyToNumber(subTotal),
-      salesTax: moneyToNumber(salesTax),
-      processingFees: moneyToNumber(processingFees),
-      total: moneyToNumber(total),
-      Transactions: transactions,
+      subTotal       : moneyToNumber(subTotal),
+      salesTax       : moneyToNumber(salesTax),
+      processingFees : moneyToNumber(processingFees),
+      total          : moneyToNumber(total),
+      Transactions   : transactions,
     } as Invoice;
 
     const response = await fetch('/api/invoice', {
-      method: 'POST',
-      body: JSON.stringify(invoice),
+      method : 'POST',
+      body   : JSON.stringify(invoice),
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
@@ -202,14 +202,14 @@ const Checkout: NextPage = () => {
 
     if (body?.success === false) {
       showNotification({
-        title: 'Uh Oh!',
-        color: 'red',
+        title  : 'Uh Oh!',
+        color  : 'red',
         message: body?.message || '',
       });
     } else {
       showNotification({
-        title: 'Awesome!',
-        color: 'green',
+        title  : 'Awesome!',
+        color  : 'green',
         message: 'Invoice saved successfully!',
       });
       resetInvoice();
@@ -331,7 +331,12 @@ const Checkout: NextPage = () => {
               itemComponent={AutocompleteItem}
               placeholder="Search for items..."
               icon={<Search size={16} />}
-              limit={10}
+              limit={100}
+              styles={{
+                dropdown: {
+                  maxHeight: '400px',
+                },
+              }}
               // initiallyOpened
             />
           </Group>
