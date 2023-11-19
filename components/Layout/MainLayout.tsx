@@ -15,11 +15,11 @@ import { ModalsProvider } from '@mantine/modals';
 import NavbarLinks from 'components/NavbarLinks';
 import Header from './Header';
 
-interface LayoutProps {
+interface ILayoutProps {
   children: React.ReactNode,
 }
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children }: ILayoutProps) {
   const theme = useMantineTheme();
 
   const [ opened, setOpened ] = useState(false);

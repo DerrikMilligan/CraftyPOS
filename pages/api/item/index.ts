@@ -53,7 +53,10 @@ export default async function handler(
 
     const items = await prisma.item.findMany({
       where  : { archived: false },
-      orderBy: { name: 'asc' },
+      orderBy: [
+        { Vendor: { firstName: 'asc' } },
+        { name: 'asc' },
+      ],
       include: { Vendor: true, Tags: true },
       // If our query is for a specific page then limit it. Otherwise return everything!
       ...(req.query?.page !== 'all' && {
