@@ -44,28 +44,26 @@ const Reports: NextPage = () => {
 
   return (
     <Container p={0}>
-      <Card p="xl">
-        <Title order={1}>Reporting</Title>
+      <Title order={1}>Reporting</Title>
 
-        <Space h="md" />
+      <Space h="md" />
 
-        <Tabs variant="outline" tabPadding="md">
-          <Tabs.Tab label="Inventory Stock" icon={<UserIcon size={14} />}>
-            <InventoryStock></InventoryStock>
+      <Tabs variant="outline" tabPadding="md">
+        <Tabs.Tab label="Inventory Stock" icon={<UserIcon size={14} />}>
+          <InventoryStock></InventoryStock>
+        </Tabs.Tab>
+
+        <Tabs.Tab label="Invoice History" icon={<UserIcon size={14} />}>
+          <InvoiceHistory></InvoiceHistory>
+        </Tabs.Tab>
+
+        { userIsAdmin && (
+          <Tabs.Tab label="Vendor Totals" icon={<UserIcon size={14} />}>
+            <VendorTotals></VendorTotals>
           </Tabs.Tab>
+        ) }
 
-          <Tabs.Tab label="Invoice History" icon={<UserIcon size={14} />}>
-            <InvoiceHistory></InvoiceHistory>
-          </Tabs.Tab>
-
-          { userIsAdmin && (
-            <Tabs.Tab label="Vendor Totals" icon={<UserIcon size={14} />}>
-              <VendorTotals></VendorTotals>
-            </Tabs.Tab>
-          ) }
-
-        </Tabs>
-      </Card>
+      </Tabs>
     </Container>
   );
 };

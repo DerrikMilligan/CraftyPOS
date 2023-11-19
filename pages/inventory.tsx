@@ -18,7 +18,7 @@ import {
 import { useModals } from '@mantine/modals';
 import { useForm } from '@mantine/form';
 import { CurrencyDollar, Pencil, X } from 'tabler-icons-react';
-import { useLocalStorage } from '@mantine/hooks';
+import { useLocalStorage, useMediaQuery } from '@mantine/hooks';
 
 import { Item, Tag, Vendor } from '@prisma/client';
 
@@ -41,6 +41,8 @@ const Inventory: NextPage = () => {
   const { items, totalPages, addItem, deleteItem, updateItem, isError, isLoading } = useItems(page);
   const { vendors } = useVendors();
   const { tags, addTag } = useTags();
+
+  const isMobile = useMediaQuery('(max-width: 800px)');
 
   const [ lastUsedVendor, setLastUsedVendor ] = useLocalStorage({
     key: 'last-used-vendor',
@@ -217,7 +219,7 @@ const Inventory: NextPage = () => {
         </Box>
       </Modal>
 
-      <Card p="lg">
+      <Container>
         <Group position="right">
           <Button onClick={() => openModal()}>Add New Item</Button>
         </Group>
@@ -227,11 +229,9 @@ const Inventory: NextPage = () => {
             <thead>
               <tr>
                 <th></th>
-                <th>Name</th>
-                <th>Initial Stock</th>
-                <th>Price</th>
                 <th>Vendor</th>
-                <th>Tags</th>
+                <th>Item</th>
+                <th>Stock/Price</th>
               </tr>
             </thead>
             <tbody>
@@ -265,12 +265,10 @@ const Inventory: NextPage = () => {
                         </ActionIcon>
                       </div>
                     </td>
-                    <td>{item.name}</td>
-                    <td>{item.stock}</td>
-                    <td>${formatMoney($(item.price))}</td>
                     <td>{item?.Vendor?.firstName || ''}</td>
                     <td>
                       <Group spacing="xs">
+                        {item.name}
                         {
                           item.Tags &&
                           Array.isArray(item.Tags) &&
@@ -288,6 +286,13 @@ const Inventory: NextPage = () => {
                         }
                       </Group>
                     </td>
+                    <td>
+                      {item.stock}
+                      &nbsp;x
+                      {isMobile ? <br /> : ' '}
+                      <CurrencyDollar size={12} color="lime" />
+                      {formatMoney($(item.price))}
+                    </td>
                   </tr>
                 ))
               }
@@ -300,7 +305,7 @@ const Inventory: NextPage = () => {
             </tbody>
           </Table>
         </ScrollArea>
-      </Card>
+      </Container>
 
       {
         totalPages !== undefined &&

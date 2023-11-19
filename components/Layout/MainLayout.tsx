@@ -4,6 +4,7 @@ import Head from 'next/head';
 import {
   AppShell,
   ColorScheme,
+  ColorSchemeProvider,
   MantineProvider,
   Navbar,
   useMantineTheme,
@@ -36,41 +37,43 @@ export default function Layout({ children }: ILayoutProps) {
         <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
       </Head>
 
-      <MantineProvider
-        withGlobalStyles
-        withNormalizeCSS
-        theme={{ colorScheme: colorScheme }}
-      >
-        <NotificationsProvider position="top-right">
-          <ModalsProvider>
-            <AppShell
-              styles={{
-                main: {
-                  background: colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
-                },
-              }}
-              navbarOffsetBreakpoint="sm"
-              asideOffsetBreakpoint="sm"
-              fixed
-              header={
-                <Header
-                  opened={opened}
-                  setOpened={setOpened}
-                  colorScheme={colorScheme}
-                  toggleColorScheme={toggleColorScheme}
-                ></Header>
-              }
-              navbar={
-                <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
-                  <NavbarLinks closeNav={() => setOpened(false)}></NavbarLinks>
-                </Navbar>
-              }
-            >
-              { children }
-            </AppShell>
-          </ModalsProvider>
-        </NotificationsProvider>
-      </MantineProvider>
+      <ColorSchemeProvider colorScheme={colorScheme} toggleColorScheme={toggleColorScheme}>
+        <MantineProvider
+          withGlobalStyles
+          withNormalizeCSS
+          theme={{ colorScheme: colorScheme }}
+        >
+          <NotificationsProvider position="top-right">
+            <ModalsProvider>
+              <AppShell
+                styles={{
+                  main: {
+                    background: colorScheme === 'dark' ? theme.colors.dark[8] : theme.colors.gray[0],
+                  },
+                }}
+                navbarOffsetBreakpoint="sm"
+                asideOffsetBreakpoint="sm"
+                fixed
+                header={
+                  <Header
+                    opened={opened}
+                    setOpened={setOpened}
+                    colorScheme={colorScheme}
+                    toggleColorScheme={toggleColorScheme}
+                  ></Header>
+                }
+                navbar={
+                  <Navbar p="md" hiddenBreakpoint="sm" hidden={!opened} width={{ sm: 200, lg: 300 }}>
+                    <NavbarLinks closeNav={() => setOpened(false)}></NavbarLinks>
+                  </Navbar>
+                }
+              >
+                { children }
+              </AppShell>
+            </ModalsProvider>
+          </NotificationsProvider>
+        </MantineProvider>
+      </ColorSchemeProvider>
     </>
   );
 }

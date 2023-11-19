@@ -35,7 +35,7 @@ export default async function handler(
   }
 
   if (req.method === 'GET') {
-    const vendors = await prisma.vendor.findMany({ orderBy: { firstName: 'desc' } });
+    const vendors = await prisma.vendor.findMany({ orderBy: { firstName: 'asc' } });
 
     return res.status(200).json(vendors);
   }

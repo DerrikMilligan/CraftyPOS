@@ -16,7 +16,7 @@ export default function VendorTotals() {
 
       <Space h="md" />
 
-      <Table>
+      <Table striped>
         <thead>
         <tr>
           <th>id</th>

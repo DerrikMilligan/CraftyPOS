@@ -25,7 +25,7 @@ export default function InventoryStock() {
       <Space h="md" />
 
       <ScrollArea type="auto">
-        <Table>
+        <Table striped>
           <thead>
             <tr>
               <th>Vendor</th>
