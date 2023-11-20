@@ -36,11 +36,12 @@ model User {
 }
 
 model Vendor {
-  id        Int    @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   firstName String
   lastName  String
   color     String
   email     String
+  archived  Boolean @default(false)
   Items     Item[]
 }
 

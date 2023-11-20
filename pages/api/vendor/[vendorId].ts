@@ -33,17 +33,17 @@ export default async function handler(
 
     return res.status(200).json(vendor);
   }
-  
+
   if (req.method === 'DELETE') {
     const vendorId = req.query.vendorId as string;
 
     try {
       const id = Number.parseInt(vendorId);
-      await prisma.vendor.delete({ where: { id } });
+      await prisma.vendor.update({ where: { id }, data: { archived: true } });
     } catch (e) {
       return res.status(500).json({ success: false, message: 'Failed to delete vendor!' });
     }
-    
+
     return res.status(200).json({ success: true, message: 'Successfully deleted vendor' });
   }
 

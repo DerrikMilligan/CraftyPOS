@@ -407,6 +407,7 @@ const Checkout: NextPage = () => {
                         icon={<CurrencyDollar size={12} color="lime" />}
                         precision={numberHasDecimal(transaction.pricePer) ? 2 : 0}
                         min={0}
+                        inputMode="decimal"
                         // styles={{ input: { padding: 2 } }}
                       />
                     </td>
@@ -523,6 +524,7 @@ const Checkout: NextPage = () => {
                   precision={2}
                   value={cashAmount || undefined}
                   onChange={val => setCashAmount(val || 0)}
+                  inputMode="decimal"
                 ></NumberInput>
                 <Stack>
                   <Text size="xs">Change:</Text>

@@ -1,13 +1,25 @@
-import { Badge, Group, ScrollArea, Space, Table, Title } from '@mantine/core';
+import { Badge, Group, Loader, ScrollArea, Space, Table, Title } from '@mantine/core';
 
 import type { Transaction } from '@prisma/client';
 
 import UseItems from '../../lib/hooks/useItems';
 import UseInvoices from '../../lib/hooks/useInvoices';
+import ErrorMessage from 'components/ErrorMessage';
 
 export default function InventoryStock() {
-  const { items } = UseItems('all');
-  const { invoices } = UseInvoices();
+  const { items, isLoading: itemsLoading, isError: itemsError } = UseItems('all');
+  const { invoices, isLoading: invoicesLoading, isError: invoicesError } = UseInvoices();
+
+  if (itemsError || invoicesError) return (
+    <ErrorMessage message={itemsError || invoicesError}></ErrorMessage>
+  );
+
+  // Handle the loading and error states
+  if (itemsLoading || invoicesLoading) return (
+    <Group position="center" mt={75}>
+      <Loader color="green" size="lg" />
+    </Group>
+  );
 
   const itemSoldMap: Record<number, number> = items?.reduce((acc, item) => {
     acc[item.id] = invoices?.reduce((acc, invoice) => {
@@ -30,7 +42,6 @@ export default function InventoryStock() {
             <tr>
               <th>Vendor</th>
               <th>Name</th>
-              <th>Sold</th>
               <th>Remaining</th>
             </tr>
           </thead>
@@ -59,7 +70,6 @@ export default function InventoryStock() {
                       }
                     </Group>
                   </td>
-                  <td>{itemSoldMap[item.id] ?? ''}</td>
                   <td>{item.stock - (itemSoldMap[item.id] ?? 0)}/{item.stock}</td>
                 </tr>
               ))

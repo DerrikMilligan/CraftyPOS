@@ -1,4 +1,4 @@
-import { add, allocate, Dinero, dinero, multiply, toSnapshot } from 'dinero.js';
+import { add, allocate, type Dinero, dinero, multiply, toSnapshot } from 'dinero.js';
 import { USD } from '@dinero.js/currencies';
 
 import { GlobalConfig, PaymentMethod, Transaction as pTransaction } from '@prisma/client';

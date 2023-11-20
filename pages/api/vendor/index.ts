@@ -28,6 +28,7 @@ export default async function handler(
         firstName: titleCase(firstName),
         lastName : titleCase(lastName),
         email    : email || '',
+        archived : false,
       }
     });
 
@@ -35,7 +36,10 @@ export default async function handler(
   }
 
   if (req.method === 'GET') {
-    const vendors = await prisma.vendor.findMany({ orderBy: { firstName: 'asc' } });
+    const vendors = await prisma.vendor.findMany({
+      orderBy: { firstName: 'asc' },
+      where  : { archived: false },
+    });
 
     return res.status(200).json(vendors);
   }
