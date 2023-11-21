@@ -48,8 +48,9 @@ export interface IVendorAllocations {
 }
 
 export interface IUseAllocationsResult {
-  ledger    : Record<number, IVendorAllocations>;
-  payoutPlan: Record<number, IVendorAllocations>;
+  payoutPlan    : Record<number, IVendorAllocations>;
+  reimbursements: Record<number, Array<IAllocation>>;
+  paymentPools  : Array<ITotals>
 }
 
 export default function useAllocations(allocationsForm: IAllocationsForm | undefined) {
@@ -62,14 +63,10 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
 
   return useMemo(() => {
     const result = {
-      payoutPlan    : {} as Record<number, IVendorAllocations>,
-      reimbursements: {} as Record<number, Array<IAllocation>>,
-      paymentPools  : [] as Array<{
-        id    : number;
-        name  : string;
-        amount: Dinero<number>;
-      }>
-    };
+      payoutPlan    : {},
+      reimbursements: {},
+      paymentPools  : []
+    } as IUseAllocationsResult;
 
     // const vendorAllocations: Record<number, IVendorAllocations> = {};
 
@@ -104,25 +101,14 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
 
     console.debug('[useAllocations] Calculating payment pools...', paymentTotals);
 
-    result.paymentPools = paymentTotals.map((paymentInfo) => {
-      let pool = paymentInfo.subTotal;
-      // pool = add(pool, paymentInfo.fees);
-      // pool = add(pool, paymentInfo.taxes);
-      // if (allocationsForm.includeFeesInAllocations) pool = add(pool, paymentInfo.fees);
-      // if (allocationsForm.includeTaxesInAllocations) pool = add(pool, paymentInfo.taxes);
-      return {
-        id    : paymentInfo.paymentMethodId,
-        name  : paymentInfo.paymentMethodName,
-        amount: pool,
-      };
-    }).filter(pool => pool !== null && pool !== undefined);
+    result.paymentPools = paymentTotals.filter(pool => pool !== null && pool !== undefined);
 
     if (result.paymentPools.length <= 0) {
       console.error('[useAllocations] No payment pools available!')
       return false;
     }
 
-    const totalPool = result.paymentPools.reduce((total, pool) => add(total, pool.amount), $(0));
+    const totalPool = result.paymentPools.reduce((total, pool) => add(total, pool.subTotal), $(0));
 
     function payVendor(
       vendorId       : number,
@@ -141,8 +127,8 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
       // Get the pool we're paying from. If no specific payment method is
       // specified, then use the first available pool.
       const poolIndex = paymentMethodId > -1
-        ? result.paymentPools.findIndex(pool => pool && pool.id === paymentMethodId)
-        : 0;
+        ? result.paymentPools.findIndex(pool => pool && pool.paymentMethodId === paymentMethodId)
+        : result.paymentPools.findIndex(pool => pool && greaterThan(pool.subTotal, $(0)));
 
       // If we're using a specific pool and failed to find it, that's a problem
       if (poolIndex === -1) {
@@ -156,31 +142,31 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
       }
 
       // If we're using a specific pool and we don't have that much money in the pool... that's a problem.
-      if (paymentMethodId > -1 && lessThan(result.paymentPools[poolIndex].amount, amount)) {
+      if (paymentMethodId > -1 && lessThan(result.paymentPools[poolIndex].subTotal, amount)) {
         console.error(`[useAllocations][payVendor] Attempted to assign more money than available in a payment pool. Pool: ${result.paymentPools[poolIndex].name}`);
         return false;
       }
 
-      console.debug(`[useAllocations][payVendor] Getting minimum of ${formatMoney(result.paymentPools[poolIndex].amount)} and ${formatMoney(amount)}`);
+      console.debug(`[useAllocations][payVendor] Getting minimum of ${formatMoney(result.paymentPools[poolIndex].subTotal)} and ${formatMoney(amount)}`);
 
       // Get how much we can actually pay. If there's less money in a pool than the amount
       // we will make up for it in the next pool
-      const poolPayment = minimum([result.paymentPools[poolIndex].amount, amount]);
+      const poolPayment = minimum([result.paymentPools[poolIndex].subTotal, amount]);
 
       if (equal(poolPayment, $(0))) {
         console.error(`[useAllocations][payVendor] Tried to make a payment of 0`);
         return false;
       }
 
-      console.debug(`[useAllocations][payVendor] Paying ${formatMoney(poolPayment)} to vendor ${vendorId} from ${result.paymentPools[poolIndex].name}`);
+      console.debug(`[useAllocations][payVendor] Paying ${formatMoney(poolPayment)} to vendor ${vendorId} from ${result.paymentPools[poolIndex].paymentMethodName}`);
 
       // Deduct the payment from the pool
-      result.paymentPools[poolIndex].amount = subtract(result.paymentPools[poolIndex].amount, poolPayment);
-      console.debug(`[useAllocations][payVendor] ${result.paymentPools[poolIndex].name} has ${formatMoney(result.paymentPools[poolIndex].amount)} remaining`);
+      result.paymentPools[poolIndex].subTotal = subtract(result.paymentPools[poolIndex].subTotal, poolPayment);
+      console.debug(`[useAllocations][payVendor] ${result.paymentPools[poolIndex].paymentMethodName} has ${formatMoney(result.paymentPools[poolIndex].subTotal)} remaining`);
 
       result.payoutPlan[vendorId].allocations.push({
         description,
-        paymentMethodId: result.paymentPools[poolIndex].id,
+        paymentMethodId: result.paymentPools[poolIndex].paymentMethodId,
         amount         : poolPayment,
         type           : allocationType,
       });
@@ -189,10 +175,9 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
 
       // If a pool is empty, we want to remove it from the remaining pools
       // and check to see if there's more to pay off
-      if (lessThanOrEqual(result.paymentPools[poolIndex].amount, $(0))) {
-        console.debug(`[useAllocations][payVendor] ${result.paymentPools[poolIndex].name} is empty. Removing from pool list.`);
-
-        result.paymentPools.shift();
+      if (lessThanOrEqual(result.paymentPools[poolIndex].subTotal, $(0))) {
+        // console.debug(`[useAllocations][payVendor] ${result.paymentPools[poolIndex].paymentMethodName} is empty. Removing from pool list.`);
+        // result.paymentPools.shift();
 
         // Attempt to pay from the next pool. This should only ever occur when we are
         // not atempting to pay from a specific pool as we will have verified that above

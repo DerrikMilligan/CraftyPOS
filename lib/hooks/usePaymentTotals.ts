@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 
 import type { PaymentMethod } from '@prisma/client';
 import type { HookInvoice } from 'lib/hooks/useInvoices';
-import type { Dinero } from 'dinero.js';
+import { Dinero, greaterThan } from 'dinero.js';
 import { add } from 'dinero.js';
 
 import { $ } from 'lib/dineroHelpers';
@@ -58,7 +58,8 @@ export default function usePaymentTotals(
 
       return acc;
     },
-    [] as Array<ITotals>)) || [],
+    [] as Array<ITotals>)
+    .filter(total => greaterThan(total.total, $(0)))) || [],
     [invoices, paymentMethods]
   );
 }

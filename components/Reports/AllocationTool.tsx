@@ -2,7 +2,25 @@ import React from 'react';
 import { useMemo } from 'react';
 import { type Dinero, add, greaterThan, multiply } from 'dinero.js';
 
-import { ActionIcon, Button, Container, Group, Kbd, Loader, NativeSelect, NumberInput, ScrollArea, Space, Stack, Table, Text, TextInput, Title } from '@mantine/core';
+import {
+  ActionIcon,
+  Button,
+  Container,
+  Group,
+  Kbd,
+  Loader,
+  NativeSelect,
+  NumberInput,
+  ScrollArea,
+  Space,
+  Stack,
+  Table,
+  Text,
+  TextInput,
+  Title,
+  useMantineColorScheme,
+  useMantineTheme,
+} from '@mantine/core';
 import { useModals } from '@mantine/modals';
 import { showNotification } from '@mantine/notifications';
 import { useForm } from '@mantine/form';
@@ -42,6 +60,8 @@ export default function DivvyingTool() {
   const { vendors, isLoading: vendorsLoading, isError: vendorsError } = useVendors();
 
   const paymentTotals = usePaymentTotals(invoices, paymentMethods);
+  const { colorScheme } = useMantineColorScheme();
+  const theme           = useMantineTheme();
 
   const form = useForm<IAllocationsForm>({
     initialValues: {
@@ -78,6 +98,7 @@ export default function DivvyingTool() {
     </Group>
   );
 
+  const alternateRowColor = colorScheme === 'dark' ? theme.colors.dark[6] : theme.colors.gray[3];
   const vendorSelectItems = vendors?.map(vendor => ({ value: vendor.id.toString(), label: vendor.firstName + ' ' + vendor.lastName })) ?? [];
   const paymentMethodSelectItems = paymentMethods?.map(paymentMethod => ({ value: paymentMethod.id.toString(), label: paymentMethod.name })) ?? [];
 
@@ -168,7 +189,7 @@ export default function DivvyingTool() {
   }
 
   return (
-    <ScrollArea type="auto">
+    <>
       <Container>
         <Title order={3}>Total Cash</Title>
         <Space h="md" />
@@ -184,7 +205,7 @@ export default function DivvyingTool() {
             {...form.getInputProps('seedMoney')}
           />
 
-          <TextInput label="Total Cash" disabled value={formatMoney(totalCash)} />
+          <TextInput label="Total Cash" disabled value={formatMoney(totalCash, true)} />
         </Group>
       </Container>
 
@@ -194,48 +215,51 @@ export default function DivvyingTool() {
         <Title order={3}>Shared Expenses</Title>
         <Space h="md" />
         <Stack spacing="xs">
-          <Table>
-            <thead>
-              <tr>
-                <th>Expense</th>
-                <th>Amount</th>
-                <th>Vendor</th>
-                <th>Type</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {form.values.sharedExpenses && form.values.sharedExpenses.map((expense, index) => (
-                <tr key={expense.name}>
-                  <td>{expense.name}</td>
-                  <td>
-                    <CurrencyDollar size={18} color="lime" />
-                    {expense.amount.toFixed(2)}
-                  </td>
-                  <td>
-                    {(vendors && vendors.find((vendor) => vendor.id === expense.vendorId)?.firstName) ?? ''} &nbsp;
-                    {(vendors && vendors.find((vendor) => vendor.id === expense.vendorId)?.lastName) ?? ''}
-                  </td>
-                  <td>{titleCase(expense.shareType)}</td>
-                  <td>
-                    <ActionIcon
-                      color="red"
-                      onClick={() => modals.openConfirmModal({
-                        title: 'Remove Expense',
-                        centered: true,
-                        children: (<Text size="sm">Are you sure you want to remove <Kbd>{expense.name}</Kbd>?</Text>),
-                        labels: { confirm: 'Remove Expense', cancel: 'Cancel' },
-                        confirmProps: { color: 'red' },
-                        onConfirm: () => removeExpense(index),
-                      })}
-                    >
-                      <X size="20"/>
-                    </ActionIcon>
-                  </td>
+          <ScrollArea type="auto">
+            <Table>
+              <thead>
+                <tr>
+                  <th>Expense</th>
+                  <th>Amount</th>
+                  <th>Vendor</th>
+                  <th>Type</th>
+                  <th></th>
                 </tr>
-              ))}
-            </tbody>
-          </Table>
+              </thead>
+              <tbody>
+                {form.values.sharedExpenses && form.values.sharedExpenses.map((expense, index) => (
+                  <tr key={expense.name}>
+                    <td>{expense.name}</td>
+                    <td style={{ whiteSpace: 'nowrap' }}>
+                      <CurrencyDollar size={18} color="lime" />
+                      {expense.amount.toFixed(2)}
+                    </td>
+                    <td>
+                      {(vendors && vendors.find((vendor) => vendor.id === expense.vendorId)?.firstName) ?? ''} &nbsp;
+                      {(vendors && vendors.find((vendor) => vendor.id === expense.vendorId)?.lastName) ?? ''}
+                    </td>
+                    <td>{titleCase(expense.shareType)}</td>
+                    <td>
+                      <ActionIcon
+                        color="red"
+                        onClick={() => modals.openConfirmModal({
+                          title: 'Remove Expense',
+                          centered: true,
+                          children: (<Text size="sm">Are you sure you want to remove <Kbd>{expense.name}</Kbd>?</Text>),
+                          labels: { confirm: 'Remove Expense', cancel: 'Cancel' },
+                          confirmProps: { color: 'red' },
+                          onConfirm: () => removeExpense(index),
+                        })}
+                      >
+                        <X size="20"/>
+                      </ActionIcon>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </ScrollArea>
+
           <TextInput
             label="Expense"
             placeholder="Dinner after..."
@@ -271,49 +295,51 @@ export default function DivvyingTool() {
         <Title order={3}>Manually Assigned Funds</Title>
         <Space h="md" />
         <Stack spacing="xs">
-          <Table>
-            <thead>
-              <tr>
-                <th>Vendor</th>
-                <th>Amount</th>
-                <th>Money Pool</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {form.values.assignedMoney && form.values.assignedMoney.map((money, index) => {
-                const vendor = vendors?.find((vendor) => vendor.id === money.vendorId);
-                if (vendor === undefined) return null;
-                return (
-                  <tr key={index}>
-                    <td>{vendor.firstName} {vendor.lastName}</td>
-                    <td>
-                      <CurrencyDollar size={18} color="lime" />
-                      {money.amount}
-                    </td>
-                    <td>
-                      {paymentMethods && paymentMethods.find((method) => method.id === money.paymentMethodId)?.name}
-                    </td>
-                    <td>
-                      <ActionIcon
-                        color="red"
-                        onClick={() => modals.openConfirmModal({
-                          title: 'Remove Assigned Money',
-                          centered: true,
-                          children: (<Text size="sm">Are you sure you want to remove <Kbd>{money.amount}</Kbd> from <Kbd>{vendor.firstName} {vendor.lastName}</Kbd>?</Text>),
-                          labels: { confirm: 'Remove Assignment', cancel: 'Cancel' },
-                          confirmProps: { color: 'red' },
-                          onConfirm: () => removeAssignedMoney(index),
-                        })}
-                      >
-                        <X size="20"/>
-                      </ActionIcon>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </Table>
+          <ScrollArea type="auto">
+            <Table>
+              <thead>
+                <tr>
+                  <th>Vendor</th>
+                  <th>Amount</th>
+                  <th>Money Pool</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {form.values.assignedMoney && form.values.assignedMoney.map((money, index) => {
+                  const vendor = vendors?.find((vendor) => vendor.id === money.vendorId);
+                  if (vendor === undefined) return null;
+                  return (
+                    <tr key={index}>
+                      <td>{vendor.firstName} {vendor.lastName}</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        <CurrencyDollar size={18} color="lime" />
+                        {money.amount}
+                      </td>
+                      <td>
+                        {paymentMethods && paymentMethods.find((method) => method.id === money.paymentMethodId)?.name}
+                      </td>
+                      <td>
+                        <ActionIcon
+                          color="red"
+                          onClick={() => modals.openConfirmModal({
+                            title: 'Remove Assigned Money',
+                            centered: true,
+                            children: (<Text size="sm">Are you sure you want to remove <Kbd>{money.amount}</Kbd> from <Kbd>{vendor.firstName} {vendor.lastName}</Kbd>?</Text>),
+                            labels: { confirm: 'Remove Assignment', cancel: 'Cancel' },
+                            confirmProps: { color: 'red' },
+                            onConfirm: () => removeAssignedMoney(index),
+                          })}
+                        >
+                          <X size="20"/>
+                        </ActionIcon>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </ScrollArea>
 
           <NumberInput
             label="Amount"
@@ -339,133 +365,205 @@ export default function DivvyingTool() {
         </Stack>
       </Container>
 
-      <Space h="xl" />
+      {form.values.sharedExpenses.length > 0 && (
+        <>
+          <Space h="xl" />
 
-      <Container>
-        <Title order={3}>Reimbursements</Title>
-        <Space h="md" />
-        <Table>
-          <thead>
-            <tr>
-              <th>Vendor</th>
-              <th>Amount</th>
-              <th>Payment Method</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allocations && Object.entries(allocations.reimbursements).map(([vendorId, reimbursements]) => {
-              const vendor = vendors?.find(vendor => vendor.id === parseInt(vendorId));
-
-              if (!vendor) return null;
-
-              return (
-                <React.Fragment key={vendorId}>
+          <Container>
+            <Title order={3}>Reimbursements</Title>
+            <Space h="md" />
+            <ScrollArea type="auto">
+              <Table>
+                <thead>
                   <tr>
-                    <td colSpan={3}>{vendor.firstName} {vendor.lastName}</td>
+                    <th>Vendor</th>
+                    <th>Amount</th>
+                    <th>Payment Method</th>
                   </tr>
-                  <tr>
-                    <td></td>
-                    <td>
-                      <CurrencyDollar size={18} color="lime" />
-                      {formatMoney(allocations.payoutPlan[parseInt(vendorId)].initialExpectedSubTotal, true)}
-                    </td>
-                    <td>Vendor Sub-total</td>
-                  </tr>
-                  {reimbursements.map((allocation, index) => {
+                </thead>
+                <tbody>
+                  {allocations && Object.entries(allocations.reimbursements).map(([vendorId, reimbursements]) => {
+                    const vendor = vendors?.find(vendor => vendor.id === parseInt(vendorId));
+
+                    if (!vendor) return null;
+
                     return (
-                      <tr key={index} style={{ color: greaterThan(allocation.amount, $(0)) ? 'lime' : 'red' }}>
-                        <td></td>
-                        <td>
-                          <CurrencyDollar size={18} color="lime" />
-                          {formatMoney(allocation.amount, true)}
-                        </td>
-                        {/* <td>{titleCase(allocation.type)}</td> */}
-                        <td>
-                          {greaterThan(allocation.amount, $(0)) && (paymentMethods?.find(method => method.id === allocation.paymentMethodId)?.name || '')}
-                          {allocation.type === 'expense'
-                            ? ` ${greaterThan(allocation.amount, $(0)) ? 'Reimbursement' : 'Reimbursing'} (${allocation.description ?? ''})`
-                            : ''}
-                        </td>
-                      </tr>
+                      <React.Fragment key={vendorId}>
+                        <tr style={{ backgroundColor: alternateRowColor }}>
+                          <td colSpan={3}>{vendor.firstName} {vendor.lastName}</td>
+                        </tr>
+                        <tr>
+                          <td></td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <CurrencyDollar size={18} color="lime" />
+                            {formatMoney(allocations.payoutPlan[parseInt(vendorId)].initialExpectedSubTotal, true)}
+                          </td>
+                          <td>Vendor Sub-total</td>
+                        </tr>
+                        {reimbursements.map((allocation, index) => {
+                          return (
+                            <tr key={index} style={{ color: greaterThan(allocation.amount, $(0)) ? 'lime' : 'red' }}>
+                              <td></td>
+                              <td style={{ whiteSpace: 'nowrap' }}>
+                                <CurrencyDollar size={18} color="lime" />
+                                {formatMoney(allocation.amount, true)}
+                              </td>
+                              {/* <td>{titleCase(allocation.type)}</td> */}
+                              <td>
+                                {greaterThan(allocation.amount, $(0)) && (paymentMethods?.find(method => method.id === allocation.paymentMethodId)?.name || '')}
+                                {allocation.type === 'expense'
+                                  ? ` ${greaterThan(allocation.amount, $(0)) ? 'Reimbursement' : 'Reimbursing'} (${allocation.description ?? ''})`
+                                  : ''}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        <tr>
+                          <td align="right">Totals:</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <CurrencyDollar size={18} color="lime" />
+                            {formatMoney(add(
+                              allocations.payoutPlan[parseInt(vendorId)].initialExpectedSubTotal,
+                              reimbursements.reduce((acc, allocation) => { return add(acc, allocation.amount)}, $(0))
+                            ), true)}
+                          </td>
+                          <td></td>
+                        </tr>
+                      </React.Fragment>
                     );
                   })}
-                  <tr>
-                    <td align="right">Totals:</td>
-                    <td>
-                      <CurrencyDollar size={18} color="lime" />
-                      {formatMoney(add(
-                        allocations.payoutPlan[parseInt(vendorId)].initialExpectedSubTotal,
-                        reimbursements.reduce((acc, allocation) => { return add(acc, allocation.amount)}, $(0))
-                      ), true)}
-                    </td>
-                    <td></td>
-                  </tr>
-                </React.Fragment>
-              );
-            })}
-          </tbody>
-        </Table>
-      </Container>
+                </tbody>
+              </Table>
+            </ScrollArea>
+          </Container>
+        </>
+      )}
 
       <Space h="xl" />
 
       <Container>
         <Title order={3}>Payout Plan</Title>
         <Space h="md" />
-        <Table>
-          <thead>
-            <tr>
-              <th>Vendor</th>
-              <th>Amount</th>
-              <th>Allocation Type</th>
-              <th>Payment Method</th>
-            </tr>
-          </thead>
-          <tbody>
-            {allocations && Object.entries(allocations.payoutPlan).map(([vendorId, allocationInfo]) => {
-              const vendor = vendors?.find(vendor => vendor.id === parseInt(vendorId));
+        <ScrollArea type="auto">
+          <Table>
+            <thead>
+              <tr>
+                <th>Vendor</th>
+                <th>Amount</th>
+                <th>Allocation Type</th>
+                <th>Payment Method</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allocations && Object.entries(allocations.payoutPlan).map(([vendorId, allocationInfo]) => {
+                const vendor = vendors?.find(vendor => vendor.id === parseInt(vendorId));
 
-              if (!vendor) return null;
+                if (!vendor) return null;
 
-              return (
-                <React.Fragment key={vendorId}>
-                  <tr>
-                    <td colSpan={4}>{vendor.firstName} {vendor.lastName}</td>
-                  </tr>
-                  {allocationInfo.allocations.map((allocation, index) => {
-                    return (
-                      <tr key={index} style={{ color: greaterThan(allocation.amount, $(0)) ? 'lime' : 'red' }}>
-                        <td></td>
-                        <td>
-                          <CurrencyDollar size={18} color="lime" />
-                          {formatMoney(allocation.amount, true)}
-                        </td>
-                        <td>{titleCase(allocation.type)}</td>
-                        <td>
-                          {greaterThan(allocation.amount, $(0)) && (paymentMethods?.find(method => method.id === allocation.paymentMethodId)?.name || '')}
-                          {allocation.type === 'expense'
-                            ? ` ${greaterThan(allocation.amount, $(0)) ? 'Reimbursement' : 'Reimbursing'} (${allocation.description ?? ''})`
-                            : ''}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                  <tr>
-                    <td align="right">Totals:</td>
-                    <td>
-                      <CurrencyDollar size={18} color="lime" />
-                      {allocationInfo.allocations.reduce((acc, allocation) => { return acc + moneyToNumber(allocation.amount)}, 0)}
-                    </td>
-                    <td></td>
-                    <td></td>
-                  </tr>
-                </React.Fragment>
-              );
-            })}
-          </tbody>
-        </Table>
+                return (
+                  <React.Fragment key={vendorId}>
+                    <tr style={{ backgroundColor: alternateRowColor }}>
+                      <td colSpan={4}>{vendor.firstName} {vendor.lastName}</td>
+                    </tr>
+                    {allocationInfo.allocations.map((allocation, index) => {
+                      return (
+                        <tr key={index} style={{ color: greaterThan(allocation.amount, $(0)) ? 'lime' : 'red' }}>
+                          <td></td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            <CurrencyDollar size={18} color="lime" />
+                            {formatMoney(allocation.amount, true)}
+                          </td>
+                          <td>{titleCase(allocation.type)}</td>
+                          <td style={{ whiteSpace: 'nowrap' }}>
+                            {greaterThan(allocation.amount, $(0)) && (paymentMethods?.find(method => method.id === allocation.paymentMethodId)?.name || '')}
+                            {allocation.type === 'expense'
+                              ? ` ${greaterThan(allocation.amount, $(0)) ? 'Reimbursement' : 'Reimbursing'} (${allocation.description ?? ''})`
+                              : ''}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    <tr>
+                      <td align="right">Totals:</td>
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        <CurrencyDollar size={18} color="lime" />
+                        {formatMoney(allocationInfo.allocations.reduce((acc, allocation) => { return add(acc, allocation.amount)}, $(0)), true)}
+                      </td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </Table>
+        </ScrollArea>
       </Container>
-    </ScrollArea>
+
+      <Space h="xl" />
+
+      <Container>
+        <Title order={3}>Remaining Pools</Title>
+        <Space h="md" />
+        <ScrollArea type="auto">
+          <Table>
+            <thead>
+              <tr>
+                <th>Payment Method</th>
+                <th>Sub Total</th>
+                <th>Fees</th>
+                <th>Taxes</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {allocations && allocations.paymentPools.map((pool) => (
+                <tr key={pool.paymentMethodId}>
+                  <td align="right">{pool.paymentMethodName}:</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <CurrencyDollar size={18} color="lime" />
+                    {formatMoney(pool.subTotal, true)}
+                  </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <CurrencyDollar size={18} color="lime" />
+                    {formatMoney(pool.fees, true)}
+                  </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <CurrencyDollar size={18} color="lime" />
+                    {formatMoney(pool.taxes, true)}
+                  </td>
+                  <td style={{ whiteSpace: 'nowrap', backgroundColor: alternateRowColor }}>
+                    <CurrencyDollar size={18} color="lime" />
+                    {formatMoney(add(pool.subTotal, add(pool.fees, pool.taxes)), true)}
+                  </td>
+                </tr>
+              ))}
+              {allocations && allocations.paymentPools && (
+                <tr style={{ backgroundColor: alternateRowColor }}>
+                  <td align="right">Totals:</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <CurrencyDollar size={18} color="lime" />
+                    {formatMoney(allocations.paymentPools.reduce((acc, pool) => add(acc, pool.subTotal), $(0)), true)}
+                  </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <CurrencyDollar size={18} color="lime" />
+                    {formatMoney(allocations.paymentPools.reduce((acc, pool) => add(acc, pool.fees), $(0)), true)}
+                  </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <CurrencyDollar size={18} color="lime" />
+                    {formatMoney(allocations.paymentPools.reduce((acc, pool) => add(acc, pool.taxes), $(0)), true)}
+                  </td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <CurrencyDollar size={18} color="lime" />
+                    {formatMoney(allocations.paymentPools.reduce((acc, pool) => add(acc, add(pool.subTotal, add(pool.fees, pool.taxes))), $(0)), true)}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </Table>
+        </ScrollArea>
+      </Container>
+    </>
   );
 }
 

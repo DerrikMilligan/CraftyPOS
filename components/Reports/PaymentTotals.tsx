@@ -61,7 +61,7 @@ export default function PaymentTotals() {
               paymentTotals &&
               paymentTotals.map((totalInfo) => (
                 <tr key={totalInfo.paymentMethodName}>
-                  <td>{totalInfo.paymentMethodName}</td>
+                  <td align="right">{totalInfo.paymentMethodName}:</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <CurrencyDollar size={12} color="lime" />
                     {formatMoney(totalInfo.subTotal)}
@@ -101,11 +101,12 @@ export default function PaymentTotals() {
               </td>
             </tr>
             <tr>
-              <td colSpan={3} align="right">Tax for the state:</td>
+              <td colSpan={3} align="right">(10%) Tax for the state:</td>
               <td style={{ whiteSpace: 'nowrap' }}>
                 <CurrencyDollar size={12} color="lime" />
-                {formatMoney(percentage(totalTotals.taxes, 10))} (10%)
+                {formatMoney(percentage(totalTotals.taxes, 10))}
               </td>
+              <td></td>
             </tr>
           </tbody>
         </Table>
