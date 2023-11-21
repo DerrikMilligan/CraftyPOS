@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo } from 'react';
 
 import { BarcodeFormat, DecodeHintType, NotFoundException } from '@zxing/library';
 import {
@@ -29,11 +29,11 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
 
   const previewEl = useRef<HTMLVideoElement>(null);
   // const codeReader = new BrowserMultiFormatReader();
-  
+
   // prep the codeReader with using a 1D reader so there's less codes we're scanning for
-  const hints = new Map();
+  const hints      = useMemo(() => new Map(), []);
+  const codeReader = useMemo(() => new BrowserMultiFormatOneDReader(hints), [hints]);
   hints.set(DecodeHintType.POSSIBLE_FORMATS, [ BarcodeFormat.CODE_128 ]);
-  const codeReader = new BrowserMultiFormatOneDReader(hints);
 
   useEffect(() => {
     if (scanning === true) {
@@ -52,7 +52,7 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
           // If we just haven't found anything then just hangout
           if (error instanceof NotFoundException)
             return;
-          
+
           // We found something so send it up!
           onScanned(result?.getText() || '__ScanError__');
 
@@ -70,7 +70,7 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
         controls.stop();
       };
     }
-  }, [ selectedDevice, scanning ]);
+  }, [ codeReader, controls, onScanned, scanning, selectedDevice, setLastCameraUsed ]);
 
   useEffect(() => {
     // Trigger the load for input devices on component mount
@@ -94,7 +94,7 @@ export default function Scanner({ scanning = true, onScanned = () => {} }: IScan
         controls.stop();
       };
     });
-  }, []);
+  }, [ controls, lastCameraUsed ]);
 
   return (
     <>

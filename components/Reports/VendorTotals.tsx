@@ -26,7 +26,7 @@ export default function VendorTotals() {
     <>
       <Title order={3}>Vendor Totals</Title>
 
-      <Text size="xs"><i>These totals don't include tax and fees!</i></Text>
+      <Text size="xs"><i>These totals don&apos;t include tax and fees!</i></Text>
 
       <Space h="md" />
 

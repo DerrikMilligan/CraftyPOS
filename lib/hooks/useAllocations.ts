@@ -143,7 +143,7 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
 
       // If we're using a specific pool and we don't have that much money in the pool... that's a problem.
       if (paymentMethodId > -1 && lessThan(result.paymentPools[poolIndex].subTotal, amount)) {
-        console.error(`[useAllocations][payVendor] Attempted to assign more money than available in a payment pool. Pool: ${result.paymentPools[poolIndex].name}`);
+        console.error(`[useAllocations][payVendor] Attempted to assign more money than available in a payment pool. Pool: ${result.paymentPools[poolIndex].paymentMethodName}`);
         return false;
       }
 

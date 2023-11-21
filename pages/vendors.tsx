@@ -18,6 +18,8 @@ import { Mail, Pencil, X } from 'tabler-icons-react';
 import { useForm } from '@mantine/form';
 import { useModals } from '@mantine/modals';
 
+import ErrorMessage from 'components/ErrorMessage';
+
 import { Vendor } from '@prisma/client';
 
 import { useVendors } from '../lib/hooks';
@@ -36,6 +38,7 @@ const Vendors: NextPage = () => {
       firstName: '',
       lastName: '',
       email: '',
+      archived: false,
       color: '',
     },
 
@@ -46,30 +49,21 @@ const Vendors: NextPage = () => {
 
   // Handle the loading and error states
   if (authStatus === 'unauthenticated') return (
-    <Container p={0}>
-      <Card p="lg">
-        <Stack align="center">
-          <Text align="center">You are not authorized to view this page!</Text>
-          <Button onClick={() => signIn()}>Click here to sign in</Button>
-        </Stack>
-      </Card>
-    </Container>
+    <ErrorMessage message="You are not authorized to view this page!">
+      <Button onClick={() => signIn()}>Click here to sign in</Button>
+    </ErrorMessage>
   );
+
   if (isError) return (
-    <Container p={0}>
-      <Card p="lg">
-        <Stack align="center">
-          <Text align="center">Error! {(isError || { message: 'Unknown Error'})?.info?.message}</Text>
-        </Stack>
-      </Card>
-    </Container>
+    <ErrorMessage message={`Error! ${(isError || { message: 'Unknown Error'})?.info?.message}`}></ErrorMessage>
   )
+
   if (authStatus === 'loading' || isLoading) return (
     <Group position="center" mt={75}>
       <Loader color="green" size="lg" />
     </Group>
   );
-  
+
   const submitVendor = form.onSubmit(async (values) => {
     setModalOpened(false);
 
@@ -105,6 +99,7 @@ const Vendors: NextPage = () => {
         <Box>
           <form onSubmit={submitVendor}>
             <input type="hidden" {...form.getInputProps('id')} />
+            <input type="hidden" {...form.getInputProps('archived')} />
             <TextInput
               label="First Name"
               required
