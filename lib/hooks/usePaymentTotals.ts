@@ -5,7 +5,7 @@ import type { HookInvoice } from 'lib/hooks/useInvoices';
 import { Dinero, greaterThan } from 'dinero.js';
 import { add } from 'dinero.js';
 
-import { $ } from 'lib/dineroHelpers';
+import { $, formatMoney } from 'lib/dineroHelpers';
 
 export interface ITotals {
   paymentMethodId  : number;
@@ -55,6 +55,8 @@ export default function usePaymentTotals(
       acc[paymentMethod.id].subTotal = add(acc[paymentMethod.id].subTotal, invoiceSubTotal);
       acc[paymentMethod.id].fees     = add(acc[paymentMethod.id].fees,     invoiceFees);
       acc[paymentMethod.id].taxes    = add(acc[paymentMethod.id].taxes,    invoiceTaxes);
+
+      console.debug(`[usePaymentTotals] ${paymentMethod.name} subTotal: ${formatMoney(acc[paymentMethod.id].subTotal)} | total: ${formatMoney(acc[paymentMethod.id].total)} | fees: ${formatMoney(acc[paymentMethod.id].fees)} | taxes: ${formatMoney(acc[paymentMethod.id].taxes)}`);
 
       return acc;
     },

@@ -101,14 +101,20 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
 
     console.debug('[useAllocations] Calculating payment pools...', paymentTotals);
 
-    result.paymentPools = paymentTotals.filter(pool => pool !== null && pool !== undefined);
+    // Create a copy of the payment totals array so we can modify it
+    result.paymentPools = [ ...paymentTotals.filter(pool => !!pool).map(pool => ({ ...pool })) ];
 
     if (result.paymentPools.length <= 0) {
       console.error('[useAllocations] No payment pools available!')
       return false;
     }
 
-    const totalPool = result.paymentPools.reduce((total, pool) => add(total, pool.subTotal), $(0));
+    const totalPool = paymentTotals
+      .filter(pool => pool !== null && pool !== undefined)
+      .reduce((total, pool) => add(total, pool.subTotal), $(0));
+
+    console.debug('[useAllocations] Total pool:', moneyToNumber(totalPool));
+    console.debug('[useAllocations] pools:', paymentTotals.filter(p => !!p).map(pool => { return { name: pool.paymentMethodName, subTotal: moneyToNumber(pool.subTotal), fees: moneyToNumber(pool.fees), taxes: moneyToNumber(pool.taxes), total: moneyToNumber(pool.total) } }));
 
     function payVendor(
       vendorId       : number,
@@ -219,15 +225,23 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
         let reimbursementTotal = $(0);
 
         for (const vendor of vendors ?? []) {
+          console.debug(`[useAllocations] Calculating vendor ${vendor.id}'s ratio...`);
+
+          console.debug(`[useAllocations] Vendor ${vendor.id} has a sub-total of ${formatMoney(result.payoutPlan[vendor.id].expectedSubTotal)}`);
+          console.debug(`[useAllocations] totalPool ${formatMoney(totalPool)}`);
           const vendorRatio = Math.floor((moneyToNumber(result.payoutPlan[vendor.id].expectedSubTotal) / moneyToNumber(totalPool)) * 100);
 
           if (vendor.id === expenseInfo.vendorId) {
             continue;
           }
 
+          console.debug(`[useAllocations] Vendor ${vendor.id} has a ratio of ${vendorRatio}%`);
+
           let reimbursementAmount = percentage($(expenseInfo.amount), vendorRatio);
           reimbursementTotal = add(reimbursementTotal, reimbursementAmount);
           reimbursementAmount = multiply(reimbursementAmount, -1);
+
+          console.debug(`[useAllocations] Reimbursing ${formatMoney(reimbursementAmount)} to vendor ${vendor.id} for ${expenseInfo.name}`);
 
           reimburseVendor(vendor.id, reimbursementAmount, expenseInfo.name);
         }

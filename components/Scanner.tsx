@@ -8,10 +8,8 @@ import {
 } from '@zxing/browser';
 
 import {
-  Container,
   Group,
   NativeSelect,
-  Text,
 } from '@mantine/core';
 
 import { useLocalStorage } from '@mantine/hooks';
