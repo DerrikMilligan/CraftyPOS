@@ -8,12 +8,12 @@ import { add } from 'dinero.js';
 import { $ } from 'lib/dineroHelpers';
 
 export interface ITotals {
-  paymentId: number;
-  name     : string;
-  total    : Dinero<number>;
-  subTotal : Dinero<number>;
-  fees     : Dinero<number>;
-  taxes    : Dinero<number>;
+  paymentMethodId  : number;
+  paymentMethodName: string;
+  total            : Dinero<number>;
+  subTotal         : Dinero<number>;
+  fees             : Dinero<number>;
+  taxes            : Dinero<number>;
 }
 
 /**
@@ -32,12 +32,12 @@ export default function usePaymentTotals(
     .reduce((acc, paymentMethod) => {
       if (acc[paymentMethod.id] === undefined) {
         acc[paymentMethod.id] = {
-          paymentId: paymentMethod.id,
-          name     : paymentMethod.name,
-          total    : $(0),
-          subTotal : $(0),
-          fees     : $(0),
-          taxes    : $(0),
+          paymentMethodId  : paymentMethod.id,
+          paymentMethodName: paymentMethod.name,
+          total            : $(0),
+          subTotal         : $(0),
+          fees             : $(0),
+          taxes            : $(0),
         };
       }
 

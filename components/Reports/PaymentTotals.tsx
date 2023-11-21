@@ -60,8 +60,8 @@ export default function PaymentTotals() {
             {
               paymentTotals &&
               paymentTotals.map((totalInfo) => (
-                <tr key={totalInfo.name}>
-                  <td>{totalInfo.name}</td>
+                <tr key={totalInfo.paymentMethodName}>
+                  <td>{totalInfo.paymentMethodName}</td>
                   <td style={{ whiteSpace: 'nowrap' }}>
                     <CurrencyDollar size={12} color="lime" />
                     {formatMoney(totalInfo.subTotal)}

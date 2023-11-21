@@ -1,5 +1,5 @@
 import React from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { type Dinero, add } from 'dinero.js';
 
 import { Button, Container, Group, Loader, NativeSelect, NumberInput, ScrollArea, Space, Stack, Table, Text, TextInput, Title } from '@mantine/core';
@@ -21,16 +21,18 @@ import usePaymentTotals from 'lib/hooks/usePaymentTotals';
 import ErrorMessage from 'components/ErrorMessage';
 
 export interface IAllocationsForm {
-  seedMoney?                 : number;
-  assignedMoneyVendor?       : string;
-  assignedMoneyAmount?       : number;
-  assignedMoneyPaymentMethod?: string;
-  assignedMoney: Array<IAssignedMoney>;
-  sharedExpenseName      : string;
-  sharedExpenseVendor?   : string;
-  sharedExpenseAmount?   : number;
-  sharedExpenseShareType?: ShareType;
-  sharedExpenses: Array<ISharedExpense>;
+  seedMoney?                   : number;
+  assignedMoneyVendorId?       : number;
+  assignedMoneyAmount?         : number;
+  assignedMoneyPaymentMethodId?: number;
+  assignedMoney                : Array<IAssignedMoney>;
+  sharedExpenseName            : string;
+  sharedExpenseVendorId?       : number;
+  sharedExpenseAmount?         : number;
+  sharedExpenseShareType?      : ShareType;
+  sharedExpenses               : Array<ISharedExpense>;
+  includeFeesInAllocations     : boolean;
+  includeTaxesInAllocations    : boolean;
 }
 
 export default function DivvyingTool() {
@@ -40,15 +42,17 @@ export default function DivvyingTool() {
 
   const paymentTotals = usePaymentTotals(invoices, paymentMethods);
 
-  const form = useForm<IForm>({
+  const form = useForm<IAllocationsForm>({
     initialValues: {
-      sharedExpenseName         : '',
-      sharedExpenseVendor       : '2',
-      sharedExpenseShareType    : 'equal',
-      assignedMoneyVendor       : '2',
-      assignedMoneyPaymentMethod: '1',
-      assignedMoney             : [],
-      sharedExpenses            : [],
+      sharedExpenseName           : '',
+      sharedExpenseVendorId       : 2,
+      sharedExpenseShareType      : 'equal',
+      assignedMoneyVendorId       : 2,
+      assignedMoneyPaymentMethodId: 1,
+      assignedMoney               : [],
+      sharedExpenses              : [],
+      includeFeesInAllocations    : false,
+      includeTaxesInAllocations   : false,
     },
   });
 
@@ -59,33 +63,6 @@ export default function DivvyingTool() {
   }, [form, paymentTotals]);
 
   const allocations = useAllocations();
-
-
-  const expenseMap = useMemo(() => {
-    return form.values.sharedExpenses.reduce((acc, expense) => {
-      const expenseAmount = $(expense.amount);
-      if (expense.shareType === 'equal') {
-        const shareRatio = 1 / (vendors?.length ?? 0);
-        vendors
-          // Don't charge the vendor who paid initially
-          ?.filter(vendor => vendor.id !== expense.vendor)
-          .forEach(vendor => {
-            if (acc[vendor.id] === undefined) acc[vendor.id] = $(0);
-            acc[vendor.id] = add(acc[vendor.id], percentage(expenseAmount, shareRatio));
-          });
-      }
-      if (acc[expense.vendor] === undefined)
-        acc[expense.vendor] = 0;
-
-      acc[expense.vendor] += expense.amount;
-
-      return acc;
-    }, {} as Record<number, Dinero<number>>);
-  }, [form, vendors]);
-
-  const divviedMoney = useMemo(() => {
-    return '';
-  }, [form]);
 
   if (invoicesError || paymentsError || vendorsError) return (
     <ErrorMessage message={invoicesError || paymentsError || vendorsError}></ErrorMessage>
@@ -105,7 +82,7 @@ export default function DivvyingTool() {
     if (
       form.values.sharedExpenseName === undefined ||
       form.values.sharedExpenseAmount === undefined ||
-      form.values.sharedExpenseVendor === undefined ||
+      form.values.sharedExpenseVendorId === undefined ||
       form.values.sharedExpenseShareType === undefined
     ) {
       showNotification({ color: 'red', message: 'Please enter an expense name and amount' });
@@ -120,7 +97,7 @@ export default function DivvyingTool() {
 
     const newExpense = {
       name     : form.values.sharedExpenseName,
-      vendor   : parseInt(form.values.sharedExpenseVendor),
+      vendorId : form.values.sharedExpenseVendorId,
       amount   : form.values.sharedExpenseAmount,
       shareType: form.values.sharedExpenseShareType,
     };
@@ -138,29 +115,29 @@ export default function DivvyingTool() {
   function assignMoney() {
     if (
       form.values.assignedMoneyAmount === undefined ||
-      form.values.assignedMoneyVendor === undefined ||
-      form.values.assignedMoneyPaymentMethod === undefined
+      form.values.assignedMoneyVendorId === undefined ||
+      form.values.assignedMoneyPaymentMethodId === undefined
     ) {
       showNotification({ color: 'red', message: 'Please set an amount, select a vendor, and a payment method' });
       return;
     }
 
-    const matchingVendor = vendors?.find(vendor => vendor.id === parseInt(form.values.assignedMoneyVendor ?? ''));
+    const matchingVendor = vendors?.find(vendor => vendor.id === form.values.assignedMoneyVendorId);
     if (matchingVendor === undefined) {
       showNotification({ color: 'red', message: 'Please select a vendor... Sorry if this is weird' });
       return;
     }
 
-    const matchingPaymentMethod = paymentMethods?.find(method => method.id === parseInt(form.values.assignedMoneyPaymentMethod ?? ''));
+    const matchingPaymentMethod = paymentMethods?.find(method => method.id === form.values.assignedMoneyPaymentMethodId);
     if (matchingPaymentMethod === undefined) {
       showNotification({ color: 'red', message: 'Please select a payment method... Sorry if this is weird' });
       return;
     }
 
     const newAssignedMoney = {
-      amount       : form.values.assignedMoneyAmount ?? 0,
-      vendor       : form.values.assignedMoneyVendor ?? '0',
-      paymentMethod: form.values.assignedMoneyPaymentMethod ?? '0',
+      amount         : form.values.assignedMoneyAmount ?? 0,
+      vendorId       : form.values.assignedMoneyVendorId ?? 0,
+      paymentMethodId: form.values.assignedMoneyPaymentMethodId ?? 0,
     };
 
     form.setValues({
@@ -218,8 +195,8 @@ export default function DivvyingTool() {
                     {expense.amount.toFixed(2)}
                   </td>
                   <td>
-                    {(vendors && vendors.find((vendor) => vendor.id === expense.vendor)?.firstName) ?? ''} &nbsp;
-                    {(vendors && vendors.find((vendor) => vendor.id === expense.vendor)?.lastName) ?? ''}
+                    {(vendors && vendors.find((vendor) => vendor.id === expense.vendorId)?.firstName) ?? ''} &nbsp;
+                    {(vendors && vendors.find((vendor) => vendor.id === expense.vendorId)?.lastName) ?? ''}
                   </td>
                   <td>{titleCase(expense.shareType)}</td>
                 </tr>
@@ -244,7 +221,7 @@ export default function DivvyingTool() {
           <NativeSelect
             label="Vendor That Paid"
             data={vendorSelectItems}
-            {...form.getInputProps('sharedExpenseVendor')}
+            {...form.getInputProps('sharedExpenseVendorId')}
           />
           <NativeSelect
             label="Reimbursement Type"
@@ -273,15 +250,15 @@ export default function DivvyingTool() {
               {form.values.assignedMoney && form.values.assignedMoney.map((money, index) => (
                 <tr key={index}>
                   <td>
-                    {(vendors && vendors.find((vendor) => vendor.id === parseInt(money.vendor))?.firstName) ?? ''} &nbsp;
-                    {(vendors && vendors.find((vendor) => vendor.id === parseInt(money.vendor))?.lastName) ?? ''}
+                    {(vendors && vendors.find((vendor) => vendor.id === money.vendorId)?.firstName) ?? ''} &nbsp;
+                    {(vendors && vendors.find((vendor) => vendor.id === money.vendorId)?.lastName) ?? ''}
                   </td>
                   <td>
                     <CurrencyDollar size={18} color="lime" />
                     {money.amount}
                   </td>
                   <td>
-                    {paymentMethods && paymentMethods.find((method) => method.id === parseInt(money.paymentMethod))?.name}
+                    {paymentMethods && paymentMethods.find((method) => method.id === money.paymentMethodId)?.name}
                   </td>
                 </tr>
               ))}
@@ -301,12 +278,12 @@ export default function DivvyingTool() {
           <NativeSelect
             label="Vendor"
             data={vendorSelectItems}
-            {...form.getInputProps('assignedMoneyVendor')}
+            {...form.getInputProps('assignedMoneyVendorId')}
           />
           <NativeSelect
             label="Money Pool"
             data={paymentMethodSelectItems}
-            {...form.getInputProps('assignedMoneyPaymentMethod')}
+            {...form.getInputProps('assignedMoneyPaymentMethodId')}
           />
           <Button onClick={() => assignMoney()}>Assign Money</Button>
         </Stack>
