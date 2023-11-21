@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 
-import { Dinero, greaterThan, lessThanOrEqual, subtract} from 'dinero.js';
+import { Dinero, equal, greaterThan, lessThanOrEqual, subtract} from 'dinero.js';
 import { add, lessThan, minimum, multiply } from 'dinero.js';
 
 import type { IAllocationsForm } from 'components/Reports/AllocationTool';
@@ -41,9 +41,15 @@ export interface IAllocation {
 }
 
 export interface IVendorAllocations {
-  expectedSubTotal: Dinero<number>;
-  allocationTotal : Dinero<number>;
-  allocations     : Array<IAllocation>;
+  initialExpectedSubTotal: Dinero<number>;
+  expectedSubTotal       : Dinero<number>;
+  allocationTotal        : Dinero<number>;
+  allocations            : Array<IAllocation>;
+}
+
+export interface IUseAllocationsResult {
+  ledger    : Record<number, IVendorAllocations>;
+  payoutPlan: Record<number, IVendorAllocations>;
 }
 
 export default function useAllocations(allocationsForm: IAllocationsForm | undefined) {
@@ -55,7 +61,17 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
   const paymentTotals = usePaymentTotals(invoices, paymentMethods);
 
   return useMemo(() => {
-    const vendorAllocations: Record<number, IVendorAllocations> = {};
+    const result = {
+      payoutPlan    : {} as Record<number, IVendorAllocations>,
+      reimbursements: {} as Record<number, Array<IAllocation>>,
+      paymentPools  : [] as Array<{
+        id    : number;
+        name  : string;
+        amount: Dinero<number>;
+      }>
+    };
+
+    // const vendorAllocations: Record<number, IVendorAllocations> = {};
 
     if (vendors === undefined || invoices === undefined || items === undefined || paymentTotals === undefined || allocationsForm === undefined) {
       return undefined;
@@ -76,16 +92,19 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
         }
       }
 
-      vendorAllocations[vendor.id] = {
-        expectedSubTotal: vendorSubTotal,
-        allocationTotal : $(0),
-        allocations     : [],
+      result.reimbursements[vendor.id] = [];
+
+      result.payoutPlan[vendor.id] = {
+        initialExpectedSubTotal: vendorSubTotal,
+        expectedSubTotal       : vendorSubTotal,
+        allocationTotal        : $(0),
+        allocations            : [],
       };
     }
 
     console.debug('[useAllocations] Calculating payment pools...', paymentTotals);
 
-    const paymentPools = paymentTotals.map((paymentInfo) => {
+    result.paymentPools = paymentTotals.map((paymentInfo) => {
       let pool = paymentInfo.subTotal;
       // pool = add(pool, paymentInfo.fees);
       // pool = add(pool, paymentInfo.taxes);
@@ -98,12 +117,12 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
       };
     }).filter(pool => pool !== null && pool !== undefined);
 
-    if (paymentPools.length <= 0) {
+    if (result.paymentPools.length <= 0) {
       console.error('[useAllocations] No payment pools available!')
       return false;
     }
 
-    const totalPool = paymentPools.reduce((total, pool) => add(total, pool.amount), $(0));
+    const totalPool = result.paymentPools.reduce((total, pool) => add(total, pool.amount), $(0));
 
     function payVendor(
       vendorId       : number,
@@ -114,7 +133,7 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
     ): boolean {
       console.debug(`[useAllocations][payVendor] Paying vendor ${vendorId} ${formatMoney(amount)} from ${paymentMethodId > -1 ? paymentMethods?.find(method => method.id === paymentMethodId)?.name : 'any pool'}`);
 
-      if (paymentPools.length <= 0) {
+      if (result.paymentPools.length <= 0) {
         console.error('[useAllocations][payVendor] No payment pools available!');
         return false;
       }
@@ -122,7 +141,7 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
       // Get the pool we're paying from. If no specific payment method is
       // specified, then use the first available pool.
       const poolIndex = paymentMethodId > -1
-        ? paymentPools.findIndex(pool => pool && pool.id === paymentMethodId)
+        ? result.paymentPools.findIndex(pool => pool && pool.id === paymentMethodId)
         : 0;
 
       // If we're using a specific pool and failed to find it, that's a problem
@@ -131,58 +150,49 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
         return false;
       }
 
-      if (paymentPools[poolIndex] === undefined) {
+      if (result.paymentPools[poolIndex] === undefined) {
         console.error(`[useAllocations][payVendor] No pool found at that index`);
         return false;
       }
 
       // If we're using a specific pool and we don't have that much money in the pool... that's a problem.
-      if (paymentMethodId > -1 && lessThan(paymentPools[poolIndex].amount, amount)) {
-        console.error(`[useAllocations][payVendor] Attempted to assign more money than available in a payment pool. Pool: ${paymentPools[poolIndex].name}`);
+      if (paymentMethodId > -1 && lessThan(result.paymentPools[poolIndex].amount, amount)) {
+        console.error(`[useAllocations][payVendor] Attempted to assign more money than available in a payment pool. Pool: ${result.paymentPools[poolIndex].name}`);
         return false;
       }
 
-      console.debug(`[useAllocations][payVendor] Getting minimum of ${formatMoney(paymentPools[poolIndex].amount)} and ${formatMoney(amount)}`);
+      console.debug(`[useAllocations][payVendor] Getting minimum of ${formatMoney(result.paymentPools[poolIndex].amount)} and ${formatMoney(amount)}`);
 
       // Get how much we can actually pay. If there's less money in a pool than the amount
       // we will make up for it in the next pool
-      const poolPayment = minimum([paymentPools[poolIndex].amount, amount]);
+      const poolPayment = minimum([result.paymentPools[poolIndex].amount, amount]);
 
-      console.debug(`[useAllocations][payVendor] Paying ${formatMoney(poolPayment)} to vendor ${vendorId} from ${paymentPools[poolIndex].name}`);
+      if (equal(poolPayment, $(0))) {
+        console.error(`[useAllocations][payVendor] Tried to make a payment of 0`);
+        return false;
+      }
 
-      vendorAllocations[vendorId].allocations.push({
+      console.debug(`[useAllocations][payVendor] Paying ${formatMoney(poolPayment)} to vendor ${vendorId} from ${result.paymentPools[poolIndex].name}`);
+
+      // Deduct the payment from the pool
+      result.paymentPools[poolIndex].amount = subtract(result.paymentPools[poolIndex].amount, poolPayment);
+      console.debug(`[useAllocations][payVendor] ${result.paymentPools[poolIndex].name} has ${formatMoney(result.paymentPools[poolIndex].amount)} remaining`);
+
+      result.payoutPlan[vendorId].allocations.push({
         description,
-        paymentMethodId: paymentPools[poolIndex].id,
+        paymentMethodId: result.paymentPools[poolIndex].id,
         amount         : poolPayment,
         type           : allocationType,
       });
 
-      const poolAdjustment = greaterThan(poolPayment, $(0))
-        ? poolPayment
-        : $(0);
-
-      // Deduct the payment from the pool
-      paymentPools[poolIndex].amount = subtract(paymentPools[poolIndex].amount, poolAdjustment);
-      console.debug(`[useAllocations][payVendor] ${paymentPools[poolIndex].name} has ${formatMoney(paymentPools[poolIndex].amount)} remaining`);
-
-      if (allocationType === 'expense') {
-        console.debug(`[useAllocations][payVendor] Adjusting vendor ${vendorId}'s expeded total by ${formatMoney(poolPayment)}`);
-
-        vendorAllocations[vendorId].expectedSubTotal = add(vendorAllocations[vendorId].expectedSubTotal, poolPayment);
-
-        if (greaterThan(poolPayment, $(0))) {
-          vendorAllocations[vendorId].allocationTotal = add(vendorAllocations[vendorId].allocationTotal, poolPayment);
-        }
-      } else {
-        vendorAllocations[vendorId].allocationTotal = add(vendorAllocations[vendorId].allocationTotal, poolPayment);
-      }
+      result.payoutPlan[vendorId].allocationTotal = add(result.payoutPlan[vendorId].allocationTotal, poolPayment);
 
       // If a pool is empty, we want to remove it from the remaining pools
       // and check to see if there's more to pay off
-      if (lessThanOrEqual(paymentPools[poolIndex].amount, $(0))) {
-        console.debug(`[useAllocations][payVendor] ${paymentPools[poolIndex].name} is empty. Removing from pool list.`);
+      if (lessThanOrEqual(result.paymentPools[poolIndex].amount, $(0))) {
+        console.debug(`[useAllocations][payVendor] ${result.paymentPools[poolIndex].name} is empty. Removing from pool list.`);
 
-        paymentPools.shift();
+        result.paymentPools.shift();
 
         // Attempt to pay from the next pool. This should only ever occur when we are
         // not atempting to pay from a specific pool as we will have verified that above
@@ -196,6 +206,19 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
       return true;
     }
 
+    function reimburseVendor(vendorId: number, amount: Dinero<number>, description: string) {
+      result.payoutPlan[vendorId].expectedSubTotal = add(result.payoutPlan[vendorId].expectedSubTotal, amount);
+      console.debug(`[useAllocations] Adjusting vendor ${vendorId}'s expeded total by ${formatMoney(amount)}`);
+
+      // Store the re-imburesement to display it but it won't be part of the payout plan. Adjusting the vendors expected sub-total is all that's needed
+      result.reimbursements[vendorId].push({
+        description: description,
+        amount     : amount,
+        type       : 'expense',
+      });
+      console.debug(`[useAllocations] Reimbursing ${formatMoney(amount)} to vendor ${vendorId} for ${description}`);
+    }
+
     const equalSplitRatio = Math.floor((1 / (vendors ?? [1]).length) * 100);
 
     for (const expenseInfo of allocationsForm.sharedExpenses) {
@@ -205,29 +228,27 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
             ? multiply(percentage($(expenseInfo.amount), equalSplitRatio), vendors.length - 1)
             : percentage($(-expenseInfo.amount), equalSplitRatio);
 
-          payVendor(vendor.id, paymentAmount, 'expense', -1, expenseInfo.name);
+          reimburseVendor(vendor.id, paymentAmount, expenseInfo.name);
         }
       } else {
         let reimbursementTotal = $(0);
 
         for (const vendor of vendors ?? []) {
-          const vendorRatio = Math.floor((moneyToNumber(vendorAllocations[vendor.id].expectedSubTotal) / moneyToNumber(totalPool)) * 100);
+          const vendorRatio = Math.floor((moneyToNumber(result.payoutPlan[vendor.id].expectedSubTotal) / moneyToNumber(totalPool)) * 100);
 
           if (vendor.id === expenseInfo.vendorId) {
             continue;
           }
 
-          const reimbursementAmount = percentage($(expenseInfo.amount), vendorRatio);
+          let reimbursementAmount = percentage($(expenseInfo.amount), vendorRatio);
           reimbursementTotal = add(reimbursementTotal, reimbursementAmount);
+          reimbursementAmount = multiply(reimbursementAmount, -1);
 
-          console.debug(`[useAllocations] Taking ${formatMoney(reimbursementAmount)} from vendor ${vendor.id} to pay ${expenseInfo.vendorId}`);
-
-          payVendor(vendor.id, multiply(reimbursementAmount, -1), 'expense', -1, expenseInfo.name);
+          reimburseVendor(vendor.id, reimbursementAmount, expenseInfo.name);
         }
 
         console.debug(`[useAllocations] Reimbursing ${formatMoney(reimbursementTotal)} to vendor ${expenseInfo.vendorId}`);
-
-        payVendor(expenseInfo.vendorId, reimbursementTotal, 'expense', -1, expenseInfo.name);
+        reimburseVendor(expenseInfo.vendorId, reimbursementTotal, expenseInfo.name);
       }
     }
 
@@ -239,7 +260,7 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
 
     // Pay out the remaining totals
     for(const vendor of vendors) {
-      const unpaidTotal = subtract(vendorAllocations[vendor.id].expectedSubTotal, vendorAllocations[vendor.id].allocationTotal);
+      const unpaidTotal = subtract(result.payoutPlan[vendor.id].expectedSubTotal, result.payoutPlan[vendor.id].allocationTotal);
       console.debug(`[useAllocations] Paying ${formatMoney(unpaidTotal)} to vendor ${vendor.id}`);
 
       if (lessThanOrEqual(unpaidTotal, $(0))) {
@@ -250,7 +271,7 @@ export default function useAllocations(allocationsForm: IAllocationsForm | undef
       payVendor(vendor.id, unpaidTotal, 'auto');
     }
 
-    return vendorAllocations;
+    return result;
   }, [allocationsForm, invoices, items, paymentMethods, paymentTotals, vendors]);
 }
 
