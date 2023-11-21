@@ -1,6 +1,6 @@
 import React from 'react';
 import { useMemo } from 'react';
-import { type Dinero, add } from 'dinero.js';
+import { type Dinero, add, greaterThan, multiply } from 'dinero.js';
 
 import { Button, Container, Group, Loader, NativeSelect, NumberInput, ScrollArea, Space, Stack, Table, Text, TextInput, Title } from '@mantine/core';
 import { showNotification } from '@mantine/notifications';
@@ -12,22 +12,22 @@ import { titleCase } from 'lib/textHelpers';
 import { $, formatMoney, percentage } from 'lib/dineroHelpers';
 
 import type { IAssignedMoney, ISharedExpense, ShareType } from 'lib/hooks/useAllocations';
-
-import UseInvoices from '../../lib/hooks/useInvoices';
-import UsePaymentMethods from '../../lib/hooks/usePaymentMethods';
-import UseVendors from '../../lib/hooks/useVendors';
+import useAllocations from 'lib/hooks/useAllocations';
+import useInvoices from '../../lib/hooks/useInvoices';
+import usePaymentMethods from '../../lib/hooks/usePaymentMethods';
+import useVendors from '../../lib/hooks/useVendors';
 import usePaymentTotals from 'lib/hooks/usePaymentTotals';
 
 import ErrorMessage from 'components/ErrorMessage';
 
 export interface IAllocationsForm {
   seedMoney?                   : number;
-  assignedMoneyVendorId?       : number;
+  assignedMoneyVendorId?       : string;
   assignedMoneyAmount?         : number;
-  assignedMoneyPaymentMethodId?: number;
+  assignedMoneyPaymentMethodId?: string;
   assignedMoney                : Array<IAssignedMoney>;
   sharedExpenseName            : string;
-  sharedExpenseVendorId?       : number;
+  sharedExpenseVendorId?       : string;
   sharedExpenseAmount?         : number;
   sharedExpenseShareType?      : ShareType;
   sharedExpenses               : Array<ISharedExpense>;
@@ -36,19 +36,19 @@ export interface IAllocationsForm {
 }
 
 export default function DivvyingTool() {
-  const { invoices, isLoading: invoicesLoading, isError: invoicesError } = UseInvoices();
-  const { paymentMethods, isLoading: paymentsLoading, isError: paymentsError } = UsePaymentMethods();
-  const { vendors, isLoading: vendorsLoading, isError: vendorsError } = UseVendors();
+  const { invoices, isLoading: invoicesLoading, isError: invoicesError } = useInvoices();
+  const { paymentMethods, isLoading: paymentsLoading, isError: paymentsError } = usePaymentMethods();
+  const { vendors, isLoading: vendorsLoading, isError: vendorsError } = useVendors();
 
   const paymentTotals = usePaymentTotals(invoices, paymentMethods);
 
   const form = useForm<IAllocationsForm>({
     initialValues: {
       sharedExpenseName           : '',
-      sharedExpenseVendorId       : 2,
+      sharedExpenseVendorId       : '2',
       sharedExpenseShareType      : 'equal',
-      assignedMoneyVendorId       : 2,
-      assignedMoneyPaymentMethodId: 1,
+      assignedMoneyVendorId       : '2',
+      assignedMoneyPaymentMethodId: '1',
       assignedMoney               : [],
       sharedExpenses              : [],
       includeFeesInAllocations    : false,
@@ -57,12 +57,12 @@ export default function DivvyingTool() {
   });
 
   const totalCash = useMemo(() => {
-    const cashInfo = paymentTotals.find(total => total && total.name === 'Cash');
+    const cashInfo = paymentTotals.find(total => total && total.paymentMethodName === 'Cash');
     if (cashInfo === undefined) return $(0);
     return add(cashInfo.total, $(form.values.seedMoney ?? 0));
   }, [form, paymentTotals]);
 
-  const allocations = useAllocations();
+  const allocations = useAllocations(form.values);
 
   if (invoicesError || paymentsError || vendorsError) return (
     <ErrorMessage message={invoicesError || paymentsError || vendorsError}></ErrorMessage>
@@ -89,7 +89,7 @@ export default function DivvyingTool() {
       return;
     }
 
-    const matchingVendor = vendors?.find(vendor => vendor.id === parseInt(form.values.sharedExpenseVendor ?? ''));
+    const matchingVendor = vendors?.find(vendor => vendor.id === parseInt(form.values.sharedExpenseVendorId ?? ''));
     if (matchingVendor === undefined) {
       showNotification({ color: 'red', message: 'Please select a vendor... Sorry if this is weird' });
       return;
@@ -97,10 +97,10 @@ export default function DivvyingTool() {
 
     const newExpense = {
       name     : form.values.sharedExpenseName,
-      vendorId : form.values.sharedExpenseVendorId,
+      vendorId : parseInt(form.values.sharedExpenseVendorId),
       amount   : form.values.sharedExpenseAmount,
       shareType: form.values.sharedExpenseShareType,
-    };
+    } as ISharedExpense;
 
     form.setValues({
       ...form.values,
@@ -122,13 +122,13 @@ export default function DivvyingTool() {
       return;
     }
 
-    const matchingVendor = vendors?.find(vendor => vendor.id === form.values.assignedMoneyVendorId);
+    const matchingVendor = vendors?.find(vendor => vendor.id === parseInt(form.values.assignedMoneyVendorId ?? ''));
     if (matchingVendor === undefined) {
       showNotification({ color: 'red', message: 'Please select a vendor... Sorry if this is weird' });
       return;
     }
 
-    const matchingPaymentMethod = paymentMethods?.find(method => method.id === form.values.assignedMoneyPaymentMethodId);
+    const matchingPaymentMethod = paymentMethods?.find(method => method.id === parseInt(form.values.assignedMoneyPaymentMethodId ?? ''));
     if (matchingPaymentMethod === undefined) {
       showNotification({ color: 'red', message: 'Please select a payment method... Sorry if this is weird' });
       return;
@@ -136,9 +136,9 @@ export default function DivvyingTool() {
 
     const newAssignedMoney = {
       amount         : form.values.assignedMoneyAmount ?? 0,
-      vendorId       : form.values.assignedMoneyVendorId ?? 0,
-      paymentMethodId: form.values.assignedMoneyPaymentMethodId ?? 0,
-    };
+      vendorId       : parseInt(form.values.assignedMoneyVendorId),
+      paymentMethodId: parseInt(form.values.assignedMoneyPaymentMethodId),
+    } as IAssignedMoney;
 
     form.setValues({
       ...form.values,
@@ -298,34 +298,45 @@ export default function DivvyingTool() {
           <thead>
             <tr>
               <th>Vendor</th>
-              <th>Payment Method</th>
               <th>Amount</th>
+              <th>Allocation Type</th>
+              <th>Payment Method</th>
             </tr>
           </thead>
           <tbody>
-            {vendors && vendors.map(vendor => (
-              <tr key={vendor.id}>
-                <td>{vendor.firstName} {vendor.lastName}</td>
-                <td></td>
-                <td></td>
-              </tr>
-            ))}
+            {allocations && Object.entries(allocations).map(([vendorId, allocationInfo]) => {
+              const vendor = vendors?.find(vendor => vendor.id === parseInt(vendorId));
+
+              if (!vendor) return null;
+
+              return (
+                <React.Fragment key={vendorId}>
+                  <tr>
+                    <td colSpan={4}>{vendor.firstName} {vendor.lastName}</td>
+                  </tr>
+                  {allocationInfo.allocations.map((allocation, index) => {
+                    return (
+                      <tr key={index} style={{ color: greaterThan(allocation.amount, $(0)) ? 'lime' : 'red' }}>
+                        <td></td>
+                        <td>
+                          <CurrencyDollar size={18} color="lime" />
+                          {formatMoney(allocation.amount, true)}
+                        </td>
+                        <td>{titleCase(allocation.type)}</td>
+                        <td>
+                          {greaterThan(allocation.amount, $(0)) && (paymentMethods?.find(method => method.id === allocation.paymentMethodId)?.name || '')}
+                          {allocation.type === 'expense'
+                            ? ` ${greaterThan(allocation.amount, $(0)) ? 'Reimbursement' : 'Reimbursing'} (${allocation.description ?? ''})`
+                            : ''}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </React.Fragment>
+              );
+            })}
           </tbody>
         </Table>
-        <Stack spacing="xs">
-          {vendors && vendors.map(vendor => (
-            <NumberInput
-              key={vendor.id}
-              label={`${vendor.firstName} ${vendor.lastName}`}
-              icon={<CurrencyDollar size={18} color="lime" />}
-              placeholder="0.00"
-              precision={2}
-              step={0.05}
-              inputMode="decimal"
-              min={0}
-            />
-          ))}
-        </Stack>
       </Container>
     </ScrollArea>
   );
