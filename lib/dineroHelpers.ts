@@ -27,7 +27,7 @@ export const toNearestQuarter = (d: Dinero<number>): Dinero<number> => $(Math.ro
 // A custom precentage opration - https://v2.dinerojs.com/docs/faq/how-do-i-calculate-a-percentage
 export const percentage = (d: Dinero<number>, share: number, scale = 0) => {
   const power = scale + 1;
-  const rest = 100 ** power - share;
+  const rest = (100 ** power) - share;
   const [chunk] = allocate(d, [ share, rest ]);
 
   return chunk;

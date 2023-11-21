@@ -6,6 +6,8 @@ import { showNotification } from '@mantine/notifications';
 
 const endpoint = '/api/item';
 
+export type HookItem = Item & { Vendor: Vendor, Tags: Tag[] };
+
 // Dummy vendor for optimistic data until things are saved and reloaded
 const loadingVendor = {
   firstName: '',
@@ -21,7 +23,7 @@ export const useItems = (initialPage: number | 'all') => {
     error,
     mutate,
     data,
-  } = useSWR<Pagination<Array<Item & { Vendor: Vendor, Tags: Tag[] }>>>(
+  } = useSWR<Pagination<Array<HookItem>>>(
     `${endpoint}?page=${pageQueryKey}`,
     getFetcher()
   );
@@ -47,7 +49,7 @@ export const useItems = (initialPage: number | 'all') => {
       },
       {
         optimisticData: {
-          data: [ { ...item, Vendor: loadingVendor }, ...items ] as Array<Item & { Vendor: Vendor, Tags: Tag[] }>,
+          data: [ { ...item, Vendor: loadingVendor }, ...items ] as Array<HookItem>,
           page,
           totalPages: data?.totalPages
         },
@@ -77,7 +79,7 @@ export const useItems = (initialPage: number | 'all') => {
       },
       {
         optimisticData: {
-          data: [ { ...item, Vendor: loadingVendor }, ...otherItems ] as Array<Item & { Vendor: Vendor, Tags: Tag[] }>,
+          data: [ { ...item, Vendor: loadingVendor }, ...otherItems ] as Array<HookItem>,
           page,
           totalPages: data?.totalPages
         },

@@ -9,36 +9,28 @@ import { CurrencyDollar } from 'tabler-icons-react';
 
 import { titleCase } from 'lib/textHelpers';
 
-import { $, percentage } from 'lib/dineroHelpers';
+import { $, formatMoney, percentage } from 'lib/dineroHelpers';
+
+import type { IAssignedMoney, ISharedExpense, ShareType } from 'lib/hooks/useAllocations';
 
 import UseInvoices from '../../lib/hooks/useInvoices';
 import UsePaymentMethods from '../../lib/hooks/usePaymentMethods';
 import UseVendors from '../../lib/hooks/useVendors';
+import usePaymentTotals from 'lib/hooks/usePaymentTotals';
 
 import ErrorMessage from 'components/ErrorMessage';
 
-type ShareType = 'equal' | 'earnings';
-
-interface IForm {
+export interface IAllocationsForm {
   seedMoney?                 : number;
   assignedMoneyVendor?       : string;
   assignedMoneyAmount?       : number;
   assignedMoneyPaymentMethod?: string;
-  assignedMoney: Array<{
-    vendor       : string;
-    amount       : number;
-    paymentMethod: string;
-  }>;
+  assignedMoney: Array<IAssignedMoney>;
   sharedExpenseName      : string;
   sharedExpenseVendor?   : string;
   sharedExpenseAmount?   : number;
   sharedExpenseShareType?: ShareType;
-  sharedExpenses: Array<{
-    name     : string;
-    vendor   : number;
-    amount   : number;
-    shareType: ShareType;
-  }>;
+  sharedExpenses: Array<ISharedExpense>;
 }
 
 export default function DivvyingTool() {
@@ -46,29 +38,7 @@ export default function DivvyingTool() {
   const { paymentMethods, isLoading: paymentsLoading, isError: paymentsError } = UsePaymentMethods();
   const { vendors, isLoading: vendorsLoading, isError: vendorsError } = UseVendors();
 
-  const [ seedMoney, setSeedMoney ] = useState<number>();
-
-  // NOTE: Some reimbursements are going to be based upon how much money each person mande
-  //       and not percentage based just for each vendor because some vendors made a lot more
-  //       money than others and we want to be fair to everyone.
-  //
-  // Equal Split
-  // Earnings Split
-
-  const paymentTotals = useMemo(() => (paymentMethods && paymentMethods
-    .reduce((acc, paymentMethod) => {
-      if (acc[paymentMethod.name] === undefined) acc[paymentMethod.name] = 0;
-      acc[paymentMethod.name] += invoices?.reduce((acc, invoice) =>
-        acc + (invoice.paymentMethodId === paymentMethod.id ? invoice.total : 0)
-      , 0) ?? 0;
-
-      return acc;
-    },
-    {} as Record<string, number>)) || {},
-    [invoices, paymentMethods]
-  );
-
-  const totalCash = useMemo(() => (paymentTotals['Cash'] ?? 0) + (seedMoney ?? 0), [paymentTotals, seedMoney]);
+  const paymentTotals = usePaymentTotals(invoices, paymentMethods);
 
   const form = useForm<IForm>({
     initialValues: {
@@ -81,6 +51,15 @@ export default function DivvyingTool() {
       sharedExpenses            : [],
     },
   });
+
+  const totalCash = useMemo(() => {
+    const cashInfo = paymentTotals.find(total => total && total.name === 'Cash');
+    if (cashInfo === undefined) return $(0);
+    return add(cashInfo.total, $(form.values.seedMoney ?? 0));
+  }, [form, paymentTotals]);
+
+  const allocations = useAllocations();
+
 
   const expenseMap = useMemo(() => {
     return form.values.sharedExpenses.reduce((acc, expense) => {
@@ -211,7 +190,7 @@ export default function DivvyingTool() {
             {...form.getInputProps('seedMoney')}
           />
 
-          <NumberInput label="Total Cash" disabled value={totalCash} precision={2} />
+          <TextInput label="Total Cash" disabled value={formatMoney(totalCash)} />
         </Group>
       </Container>
 

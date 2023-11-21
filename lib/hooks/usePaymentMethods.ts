@@ -9,7 +9,7 @@ export const usePaymentMethods = () => {
   const {
     error,
     data: paymentMethods,
-  } = useSWRImmutable<PaymentMethod[]>(endpoint, getFetcher());
+  } = useSWRImmutable<Array<PaymentMethod>>(endpoint, getFetcher());
 
   return {
     paymentMethods,

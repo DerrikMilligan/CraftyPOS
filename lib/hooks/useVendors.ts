@@ -12,13 +12,13 @@ export const useVendors = () => {
     mutate,
     data: vendors,
   } = useSWR<Vendor[]>(endpoint, getFetcher());
-  
+
   const addVendor = async (vendor: Vendor) => {
     if (vendors === undefined)
       throw new Error('Attempting to add vendor before vendors resolved');
-    
+
     let newVendor = null;
-    
+
     await mutate(
       async () => {
         try {
@@ -28,23 +28,23 @@ export const useVendors = () => {
         } catch (e) {
           showNotification({ color: 'red', title: 'Uh oh!', message: 'Something went wrong when saving the vendor! Try again later.' });
         }
-        
+
         return vendors;
-      }, 
+      },
       {
         optimisticData: [ vendor, ...vendors ],
       },
     );
-    
+
     return newVendor;
   };
-  
+
   const updateVendor = async (vendor: Vendor) => {
     if (vendors === undefined)
       throw new Error('Attempting to update vendor before vendors resolved');
 
     const otherVendors = vendors.filter((v) => v.id !== vendor.id);
-    
+
     await mutate(
       async () => {
         try {
@@ -62,21 +62,21 @@ export const useVendors = () => {
       },
     );
   };
-  
+
   const deleteVendor = async (vendor: Vendor) => {
     if (vendors === undefined)
       throw new Error('Attempting to delete vendor before vendors resolved');
-    
+
     const remainingVendors = vendors.filter((v) => v.id !== vendor.id);
 
     await mutate(
       async () => {
         try {
           const response = await jsonDelete(`${endpoint}/${vendor.id}`, vendor);
-          
+
           if (response.success === false)
             throw new Error('Bubble up the error');
-          
+
           showNotification({ color: 'green', title: 'Removed!', message: 'Vendor removed successfully' });
           return remainingVendors;
         } catch (e) {

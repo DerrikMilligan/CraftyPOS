@@ -15,7 +15,7 @@ export const useTags = () => {
   const addTag = async (tag: Tag) => {
     if (tags === undefined)
       throw new Error('Attempting to add tag before tags resolved');
-    
+
     let newTag = null;
 
     await mutate(
@@ -34,7 +34,7 @@ export const useTags = () => {
         optimisticData: [ tag, ...tags ],
       },
     );
-    
+
     return newTag;
   };
 
@@ -48,10 +48,10 @@ export const useTags = () => {
       async () => {
         try {
           const response = await jsonDelete(`${endpoint}/${tag.id}`, tag);
-          
+
           if (response.success === false)
             throw new Error('Bubble up the error');
-          
+
           // showNotification({ color: 'green', title: 'Removed!', message: 'Tag removed successfully' });
           return updatedTags;
         } catch (e) {
@@ -61,9 +61,7 @@ export const useTags = () => {
 
         return tags;
       },
-      {
-        optimisticData: updatedTags,
-      },
+      { optimisticData: updatedTags },
     );
   }
 

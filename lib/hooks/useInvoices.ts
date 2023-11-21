@@ -7,12 +7,14 @@ import { showNotification } from '@mantine/notifications';
 
 const endpoint = '/api/invoice';
 
+export type HookInvoice = Invoice & { Transactions: Transaction[] };
+
 export const useInvoices = () => {
   const {
     error,
     mutate,
     data: invoices,
-  } = useSWR<Array<Invoice & { Transactions: Transaction[] }>>(endpoint, getFetcher());
+  } = useSWR<Array<HookInvoice>>(endpoint, getFetcher());
 
   const deleteInvoice = async (invoice: Invoice) => {
     if (invoices === undefined)

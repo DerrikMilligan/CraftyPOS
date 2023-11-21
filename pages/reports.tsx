@@ -12,7 +12,7 @@ import InventoryStock from 'components/Reports/InventoryStock';
 import InvoiceHistory from 'components/Reports/InvoiceHistory';
 import VendorTotals from 'components/Reports/VendorTotals';
 import PaymentTotals from 'components/Reports/PaymentTotals';
-import DivvyingTool from 'components/Reports/DivvyingTool';
+import AllocationTool from 'components/Reports/AllocationTool';
 
 const Reports: NextPage = () => {
   const { data: sessionData, status: authStatus } = useSession();
@@ -53,8 +53,8 @@ const Reports: NextPage = () => {
         )}
 
         {userIsAdmin && (
-          <Tabs.Tab label="Divvying Tool" icon={<UserIcon size={14} />}>
-            <DivvyingTool></DivvyingTool>
+          <Tabs.Tab label="Allocation Tool" icon={<UserIcon size={14} />}>
+            <AllocationTool></AllocationTool>
           </Tabs.Tab>
         )}
 
