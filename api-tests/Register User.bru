@@ -1,0 +1,20 @@
+meta {
+  name: Register User
+  type: http
+  seq: 2
+}
+
+post {
+  url: http://localhost:3000/api/admin/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "email": "email",
+    "username": "username",
+    "password": "password",
+    "role": "ADMIN"
+  }
+}
