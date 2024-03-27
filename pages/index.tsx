@@ -88,7 +88,16 @@ const Checkout: NextPage = () => {
       } as AutocompleteItemProps;
     }) || [], [ items, transactions ]);
 
-  const paymentMethod = useMemo(() => (Array.isArray(paymentMethods) ? paymentMethods : []).find(method => method.name === paymentMethodName), [ paymentMethods, paymentMethodName ]);
+  const paymentMethod = useMemo(() => {
+    if (paymentMethods === undefined || Array.isArray(paymentMethods) === false || paymentMethods?.length === 0) return;
+
+    const method = paymentMethods.find(method => method.name === paymentMethodName);
+
+    if (method === undefined)
+      return setPaymentMethodName(paymentMethods[0].name);
+
+    return method;
+  }, [ paymentMethods, paymentMethodName ]);
 
   const subTotal = useMemo(() => calculateSubTotal(transactions), [ transactions ]);
   const salesTax = useMemo(() => calculateSalesTax(subTotal, config), [ subTotal, config ]);
@@ -398,6 +407,7 @@ const Checkout: NextPage = () => {
                       icon={<CurrencyDollar size={12} color="lime" />}
                       precision={numberHasDecimal(transaction.pricePer) ? 2 : 0}
                       min={0}
+                      step={0.05}
                       inputMode="decimal"
                       // styles={{ input: { padding: 2 } }}
                     />
@@ -515,6 +525,7 @@ const Checkout: NextPage = () => {
                 precision={2}
                 value={cashAmount || undefined}
                 onChange={val => setCashAmount(val || 0)}
+                step={0.05}
                 inputMode="decimal"
               ></NumberInput>
               <Stack>
