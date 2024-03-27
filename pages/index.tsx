@@ -93,8 +93,10 @@ const Checkout: NextPage = () => {
 
     const method = paymentMethods.find(method => method.name === paymentMethodName);
 
-    if (method === undefined)
-      return setPaymentMethodName(paymentMethods[0].name);
+    if (method === undefined) {
+      setPaymentMethodName(paymentMethods[0].name);
+      return;
+    }
 
     return method;
   }, [ paymentMethods, paymentMethodName ]);
