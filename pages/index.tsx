@@ -43,6 +43,7 @@ import {
 
 import Scanner from 'components/Scanner';
 import { AutocompleteItem, AutocompleteItemProps } from 'components/AutocompleteItem';
+import ErrorMessage from 'components/ErrorMessage';
 import { filterItems } from 'lib/filterItems';
 import useItems from '../lib/hooks/useItems';
 import usePaymentMethods from '../lib/hooks/usePaymentMethods';
@@ -96,24 +97,15 @@ const Checkout: NextPage = () => {
 
   // Handle the loading and error states
   if (authStatus === 'unauthenticated') return (
-    <Container p={0}>
-      <Card p="lg">
-        <Stack align="center">
-          <Text align="center">You are not authorized to view this page!</Text>
-          <Button onClick={() => signIn()}>Click here to sign in</Button>
-        </Stack>
-      </Card>
-    </Container>
+    <ErrorMessage message="You are not authorized to view this page!">
+      <Button onClick={() => signIn()}>Click here to sign in</Button>
+    </ErrorMessage>
   );
+
   if (isError || paymentIsError || configIsError) return (
-    <Container p={0}>
-      <Card p="lg">
-        <Stack align="center">
-          <Text align="center">Error! {(isError || paymentIsError || configIsError || { message: 'Unknown Error'})?.info?.message}</Text>
-        </Stack>
-      </Card>
-    </Container>
+    <ErrorMessage message={`Error! ${(isError || paymentIsError || configIsError || { message: 'Unknown Error'})?.info?.message}`} />
   )
+
   if (authStatus === 'loading' || isLoading || paymentIsLoading || configIsLoading) return (
     <Group position="center" mt={75}>
       <Loader color="green" size="lg" />
@@ -304,287 +296,285 @@ const Checkout: NextPage = () => {
       </Modal>
 
       <Container p={0}>
-        <Card p="lg">
-          <Group>
-            <Title>Create Invoice</Title>
-          </Group>
+        <Group>
+          <Title>Create Invoice</Title>
+        </Group>
 
-          <Space h="md" />
+        <Space h="md" />
 
-          <Group position="left">
-            <Button onClick={() => setScanning(true)}>Scan Item</Button>
-          </Group>
+        <Group position="left">
+          <Button onClick={() => setScanning(true)}>Scan Item</Button>
+        </Group>
 
-          <Space h="md" />
+        <Space h="md" />
 
-          <Group grow>
-            <Autocomplete
-              // List of items
-              data={autocompleteItems as AutocompleteItemMantine[]}
-              // Maintain our own state because we need to be able to reset it when we want
-              value={itemFilter}
-              onChange={(value) => setItemFilter(value)}
-              // @ts-ignore Don't worry about the type mismatch here. It's actually correct
-              onItemSubmit={addItemToInvoice}
-              // @ts-ignore Don't worry about the type mismatch here. It's actually correct
-              filter={filterItems}
-              itemComponent={AutocompleteItem}
-              placeholder="Search for items..."
-              icon={<Search size={16} />}
-              limit={100}
-              styles={{
-                dropdown: {
-                  maxHeight: '400px',
-                },
-              }}
-              // initiallyOpened
-            />
-          </Group>
+        <Group grow>
+          <Autocomplete
+            // List of items
+            data={autocompleteItems as AutocompleteItemMantine[]}
+            // Maintain our own state because we need to be able to reset it when we want
+            value={itemFilter}
+            onChange={(value) => setItemFilter(value)}
+            // @ts-ignore Don't worry about the type mismatch here. It's actually correct
+            onItemSubmit={addItemToInvoice}
+            // @ts-ignore Don't worry about the type mismatch here. It's actually correct
+            filter={filterItems}
+            itemComponent={AutocompleteItem}
+            placeholder="Search for items..."
+            icon={<Search size={16} />}
+            limit={100}
+            styles={{
+              dropdown: {
+                maxHeight: '400px',
+              },
+            }}
+            // initiallyOpened
+          />
+        </Group>
 
-          <Space h="md" />
+        <Space h="md" />
 
-          <ScrollArea type="auto">
-            <Table fontSize="xs" horizontalSpacing="xs" verticalSpacing="xs" striped={true} highlightOnHover>
-              <thead>
-                <tr>
-                  <th style={{ width: '10px' }}></th>
-                  <th style={{ width: '30px' }}>Quant</th>
-                  <th style={{ width: '100px', minWidth: '90px' }}>Price</th>
-                  <th style={{ minWidth: '100px'}}>Item</th>
-                  <th align="right" style={{ width: '100px', minWidth: '100px' }}>Total</th>
-                </tr>
-              </thead>
-              <tbody>
-              {
-                transactions &&
-                transactions.length > 0 &&
-                transactions.map((transaction) => (
-                  <tr key={transaction.Item.id}>
-                    <td style={{ padding: 0 }}>
-                      <ActionIcon
-                        tabIndex={-1}
-                        size={14}
-                        color="red"
-                        onClick={() => modals.openConfirmModal({
-                          title: 'Remove Item',
-                          centered: true,
-                          children: (
-                            <Text size="sm">
-                              Are you sure you want to remove <Kbd>{transaction.Item.name}</Kbd> from the invoice?
-                            </Text>
-                          ),
-                          labels: { confirm: 'Remove Item', cancel: 'Cancel' },
-                          confirmProps: { color: 'red' },
-                          onConfirm: () => setTransactions([ ...transactions.filter(t => t.itemId !== transaction.itemId) ]),
-                        })}
-                      >
-                        <X size="20"/>
-                      </ActionIcon>
-                    </td>
-
-                    <td>
-                      <Group spacing={1} position="center">
-                        <NumberInput
-                          variant="filled"
-                          hideControls
-                          size="xs"
-                          value={transaction.itemQuantity}
-                          onChange={(val) => updateTransaction(transaction.Item.id, 'itemQuantity', val)}
-                          min={0}
-                          styles={{ input: { textAlign: 'center' } }}
-                          // styles={{ input: { width: '30px', padding: 0, textAlign: 'center' } }}
-                        />
-                      </Group>
-                    </td>
-
-                    <td>
-                      <NumberInput
-                        hideControls
-                        value={transaction.pricePer}
-                        onChange={(val) => updateTransaction(transaction.Item.id, 'pricePer', val)}
-                        size="xs"
-                        iconWidth={20}
-                        icon={<CurrencyDollar size={12} color="lime" />}
-                        precision={numberHasDecimal(transaction.pricePer) ? 2 : 0}
-                        min={0}
-                        inputMode="decimal"
-                        // styles={{ input: { padding: 2 } }}
-                      />
-                    </td>
-
-                    <td style={{ minWidth: 100 }}>
-                      { transaction.Item.name }
-                      <Group spacing={2}>
-                        {
-                          transaction.Item.Tags &&
-                          Array.isArray(transaction.Item.Tags) &&
-                          transaction.Item.Tags.length > 0 &&
-                          // Create a new array of the tags that's sortable because it's readonly
-                          [ ...transaction.Item.Tags ]
-                            .sort((a, b) => {
-                              if (a.name < b.name) return -1;
-                              if (a.name > b.name) return 1;
-                              return 0;
-                            })
-                            .map((tag) => (
-                              <Badge key={tag.id} size="xs" color="green">{tag.name}</Badge>
-                            ))
-                        }
-                      </Group>
-                    </td>
-
-                    <td>
-                      <CurrencyDollar size={12} color="lime" />
-                      {formatMoney($(transaction.pricePer * transaction.itemQuantity), true)}
-                    </td>
-                  </tr>
-                ))
-                ||
-                <tr>
-                  <td colSpan={5}>
-                    Search for an item to add above
-                  </td>
-                </tr>
-              }
-
-                <tr style={{ lineHeight: 0.2 }}>
-                  <td colSpan={2}>&nbsp;</td>
-                </tr>
-              </tbody>
-            </Table>
-          </ScrollArea>
-
-          <Group>
-            <Title order={3}>Totals</Title>
-          </Group>
-
+        <ScrollArea type="auto">
           <Table fontSize="xs" horizontalSpacing="xs" verticalSpacing="xs" striped={true} highlightOnHover>
             <thead>
               <tr>
-                <th style={{ minWidth: '150px'}}></th>
-                <th align="right" style={{ width: '100px', minWidth: '100px' }}></th>
+                <th style={{ width: '10px' }}></th>
+                <th style={{ width: '30px' }}>Quant</th>
+                <th style={{ width: '100px', minWidth: '90px' }}>Price</th>
+                <th style={{ minWidth: '100px'}}>Item</th>
+                <th align="right" style={{ width: '100px', minWidth: '100px' }}>Total</th>
               </tr>
             </thead>
             <tbody>
+            {
+              transactions &&
+              transactions.length > 0 &&
+              transactions.map((transaction) => (
+                <tr key={transaction.Item.id}>
+                  <td style={{ padding: 0 }}>
+                    <ActionIcon
+                      tabIndex={-1}
+                      size={14}
+                      color="red"
+                      onClick={() => modals.openConfirmModal({
+                        title: 'Remove Item',
+                        centered: true,
+                        children: (
+                          <Text size="sm">
+                            Are you sure you want to remove <Kbd>{transaction.Item.name}</Kbd> from the invoice?
+                          </Text>
+                        ),
+                        labels: { confirm: 'Remove Item', cancel: 'Cancel' },
+                        confirmProps: { color: 'red' },
+                        onConfirm: () => setTransactions([ ...transactions.filter(t => t.itemId !== transaction.itemId) ]),
+                      })}
+                    >
+                      <X size="20"/>
+                    </ActionIcon>
+                  </td>
+
+                  <td>
+                    <Group spacing={1} position="center">
+                      <NumberInput
+                        variant="filled"
+                        hideControls
+                        size="xs"
+                        value={transaction.itemQuantity}
+                        onChange={(val) => updateTransaction(transaction.Item.id, 'itemQuantity', val)}
+                        min={0}
+                        styles={{ input: { textAlign: 'center' } }}
+                        // styles={{ input: { width: '30px', padding: 0, textAlign: 'center' } }}
+                      />
+                    </Group>
+                  </td>
+
+                  <td>
+                    <NumberInput
+                      hideControls
+                      value={transaction.pricePer}
+                      onChange={(val) => updateTransaction(transaction.Item.id, 'pricePer', val)}
+                      size="xs"
+                      iconWidth={20}
+                      icon={<CurrencyDollar size={12} color="lime" />}
+                      precision={numberHasDecimal(transaction.pricePer) ? 2 : 0}
+                      min={0}
+                      inputMode="decimal"
+                      // styles={{ input: { padding: 2 } }}
+                    />
+                  </td>
+
+                  <td style={{ minWidth: 100 }}>
+                    { transaction.Item.name }
+                    <Group spacing={2}>
+                      {
+                        transaction.Item.Tags &&
+                        Array.isArray(transaction.Item.Tags) &&
+                        transaction.Item.Tags.length > 0 &&
+                        // Create a new array of the tags that's sortable because it's readonly
+                        [ ...transaction.Item.Tags ]
+                          .sort((a, b) => {
+                            if (a.name < b.name) return -1;
+                            if (a.name > b.name) return 1;
+                            return 0;
+                          })
+                          .map((tag) => (
+                            <Badge key={tag.id} size="xs" color="green">{tag.name}</Badge>
+                          ))
+                      }
+                    </Group>
+                  </td>
+
+                  <td>
+                    <CurrencyDollar size={12} color="lime" />
+                    {formatMoney($(transaction.pricePer * transaction.itemQuantity), true)}
+                  </td>
+                </tr>
+              ))
+              ||
+              <tr>
+                <td colSpan={5}>
+                  Search for an item to add above
+                </td>
+              </tr>
+            }
+
               <tr style={{ lineHeight: 0.2 }}>
                 <td colSpan={2}>&nbsp;</td>
               </tr>
-              <tr style={{ lineHeight: 0.5 }}>
-                <td align="right">Sub Total:</td>
-                <td>
-                  <CurrencyDollar size={12} color="lime" />
-                  {formatMoney(subTotal, true)}
-                </td>
-              </tr>
-              <tr style={{ lineHeight: 0.5 }}>
-                <td align="right">Tax:</td>
-                <td>
-                  <CurrencyDollar size={12} color="lime" />
-                  {formatMoney(salesTax, true)}
-                </td>
-              </tr>
-              <tr style={{ lineHeight: 0.5 }}>
-                <td align="right">Fees:</td>
-                <td>
-                  <CurrencyDollar size={12} color="lime" />
-                  {formatMoney(processingFees, true)}
-                </td>
-              </tr>
-              <tr style={{ lineHeight: 0.5 }}>
-                <td align="right">Total:</td>
-                <td>
-                  <CurrencyDollar size={12} color="lime" />
-                  {formatMoney(total, true)}
-                </td>
-              </tr>
             </tbody>
           </Table>
+        </ScrollArea>
 
-          <Space h="md" />
+        <Group>
+          <Title order={3}>Totals</Title>
+        </Group>
 
-          <Group position="right" align="center">
-            <NativeSelect
-              label="Payment Method"
-              size="xs"
-              data={paymentMethods?.map(method => method.name) || []}
-              value={paymentMethodName}
-              onChange={(event) => setPaymentMethodName(event.target.value)}
-            ></NativeSelect>
+        <Table fontSize="xs" horizontalSpacing="xs" verticalSpacing="xs" striped={true} highlightOnHover>
+          <thead>
+            <tr>
+              <th style={{ minWidth: '150px'}}></th>
+              <th align="right" style={{ width: '100px', minWidth: '100px' }}></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style={{ lineHeight: 0.2 }}>
+              <td colSpan={2}>&nbsp;</td>
+            </tr>
+            <tr style={{ lineHeight: 0.5 }}>
+              <td align="right">Sub Total:</td>
+              <td>
+                <CurrencyDollar size={12} color="lime" />
+                {formatMoney(subTotal, true)}
+              </td>
+            </tr>
+            <tr style={{ lineHeight: 0.5 }}>
+              <td align="right">Tax:</td>
+              <td>
+                <CurrencyDollar size={12} color="lime" />
+                {formatMoney(salesTax, true)}
+              </td>
+            </tr>
+            <tr style={{ lineHeight: 0.5 }}>
+              <td align="right">Fees:</td>
+              <td>
+                <CurrencyDollar size={12} color="lime" />
+                {formatMoney(processingFees, true)}
+              </td>
+            </tr>
+            <tr style={{ lineHeight: 0.5 }}>
+              <td align="right">Total:</td>
+              <td>
+                <CurrencyDollar size={12} color="lime" />
+                {formatMoney(total, true)}
+              </td>
+            </tr>
+          </tbody>
+        </Table>
 
-          {
-            paymentMethodName === 'Cash' &&
-            (
-              <>
-                <NumberInput
-                  label="Cash Given"
-                  size="xs"
-                  iconWidth={20}
-                  icon={<CurrencyDollar size={12} color="lime" />}
-                  min={0}
-                  precision={2}
-                  value={cashAmount || undefined}
-                  onChange={val => setCashAmount(val || 0)}
-                  inputMode="decimal"
-                ></NumberInput>
-                <Stack>
-                  <Text size="xs">Change:</Text>
-                  <Group>
-                    <CurrencyDollar size={12} color="lime" />
-                    <Text size="xs">{formatMoney(subtract($(cashAmount), total))}</Text>
-                  </Group>
-                </Stack>
-              </>
-            )
-          }
+        <Space h="md" />
 
-          {
-            paymentMethodName === 'Check' &&
-            (
-              <TextInput
-                label="Check Number"
+        <Group position="right" align="center">
+          <NativeSelect
+            label="Payment Method"
+            size="xs"
+            data={paymentMethods?.map(method => method.name) || []}
+            value={paymentMethodName}
+            onChange={(event) => setPaymentMethodName(event.target.value)}
+          ></NativeSelect>
+
+        {
+          paymentMethodName === 'Cash' &&
+          (
+            <>
+              <NumberInput
+                label="Cash Given"
                 size="xs"
-                value={checkNumber}
-                onChange={event => setCheckNumber(event.target.value)}
-              ></TextInput>
-            )
-          }
+                iconWidth={20}
+                icon={<CurrencyDollar size={12} color="lime" />}
+                min={0}
+                precision={2}
+                value={cashAmount || undefined}
+                onChange={val => setCashAmount(val || 0)}
+                inputMode="decimal"
+              ></NumberInput>
+              <Stack>
+                <Text size="xs">Change:</Text>
+                <Group>
+                  <CurrencyDollar size={12} color="lime" />
+                  <Text size="xs">{formatMoney(subtract($(cashAmount), total))}</Text>
+                </Group>
+              </Stack>
+            </>
+          )
+        }
 
-          </Group>
+        {
+          paymentMethodName === 'Check' &&
+          (
+            <TextInput
+              label="Check Number"
+              size="xs"
+              value={checkNumber}
+              onChange={event => setCheckNumber(event.target.value)}
+            ></TextInput>
+          )
+        }
 
-          <Space h="md" />
+        </Group>
 
-          <Group position="right">
-            <Button
-              color="red"
-              onClick={() => modals.openConfirmModal({
-                title: 'Clear Invoice',
-                centered: true,
-                children: (
-                  <Text size="sm" color="red">Are you sure you want to clear this invoice?</Text>
-                ),
-                labels: { confirm: 'Clear Invoice', cancel: 'Cancel' },
-                confirmProps: { color: 'red' },
-                onConfirm: resetInvoice,
-              })}
-            >
-              Clear Invoice
-            </Button>
-            <Button
-              onClick={() => modals.openConfirmModal({
-                title: 'Save Invoice',
-                centered: true,
-                children: (
-                  <Text size="sm">Are you sure you want to save this invoice?</Text>
-                ),
-                labels: { confirm: 'Save Invoice', cancel: 'Cancel' },
-                confirmProps: { color: 'green' },
-                onConfirm: saveInvoice,
-              })}
-            >
-              Submit Invoice
-            </Button>
-          </Group>
-        </Card>
+        <Space h="md" />
+
+        <Group position="right">
+          <Button
+            color="red"
+            onClick={() => modals.openConfirmModal({
+              title: 'Clear Invoice',
+              centered: true,
+              children: (
+                <Text size="sm" color="red">Are you sure you want to clear this invoice?</Text>
+              ),
+              labels: { confirm: 'Clear Invoice', cancel: 'Cancel' },
+              confirmProps: { color: 'red' },
+              onConfirm: resetInvoice,
+            })}
+          >
+            Clear Invoice
+          </Button>
+          <Button
+            onClick={() => modals.openConfirmModal({
+              title: 'Save Invoice',
+              centered: true,
+              children: (
+                <Text size="sm">Are you sure you want to save this invoice?</Text>
+              ),
+              labels: { confirm: 'Save Invoice', cancel: 'Cancel' },
+              confirmProps: { color: 'green' },
+              onConfirm: saveInvoice,
+            })}
+          >
+            Submit Invoice
+          </Button>
+        </Group>
       </Container>
     </>
   );
