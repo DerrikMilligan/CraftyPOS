@@ -6,6 +6,15 @@ body {
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
 }
 
+/* Target iOS devices */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  /* Disable pinch zooming */
+  html, body {
+    touch-action: manipulation;
+    -ms-touch-action: manipulation;
+  }
+}
+
 a {
   color: inherit;
   text-decoration: none;
